@@ -1,6 +1,6 @@
 import { usePDVStore, CartItem } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
-import { stepParaUnidade } from '@/utils/formatQtd'
+import { stepParaUnidade, fmtQtd, isPeso } from '@/utils/formatQtd'
 
 interface Props {
   selecionado: number | null
@@ -74,30 +74,37 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
         </p>
       </div>
 
-      <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-        <button
-          onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - stepParaUnidade(item.unidade_medida)).toFixed(3))))}
-          className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
-          style={{ background: '#2a2a2d', color: '#d1d5db' }}
-        >
-          −
-        </button>
-        <input
-          type="number"
-          step={stepParaUnidade(item.unidade_medida)}
-          min="0"
-          value={item.quantidade}
-          onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
-          className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
-          style={{ color: '#f5f5f5' }}
-        />
-        <button
-          onClick={() => onUpdateQtd(parseFloat((item.quantidade + stepParaUnidade(item.unidade_medida)).toFixed(3)))}
-          className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
-          style={{ background: '#22c55e', color: '#0a0a0a' }}
-        >
-          +
-        </button>
+      <div className="flex flex-col items-center gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
+        {isPeso(item.unidade_medida) && (
+          <span className="text-[11px] font-mono font-semibold" style={{ color: '#22c55e' }}>
+            {fmtQtd(item.quantidade, item.unidade_medida)}
+          </span>
+        )}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - stepParaUnidade(item.unidade_medida)).toFixed(3))))}
+            className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
+            style={{ background: '#2a2a2d', color: '#d1d5db' }}
+          >
+            −
+          </button>
+          <input
+            type="number"
+            step={stepParaUnidade(item.unidade_medida)}
+            min="0"
+            value={item.quantidade}
+            onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
+            className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
+            style={{ color: '#f5f5f5' }}
+          />
+          <button
+            onClick={() => onUpdateQtd(parseFloat((item.quantidade + stepParaUnidade(item.unidade_medida)).toFixed(3)))}
+            className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
+            style={{ background: '#22c55e', color: '#0a0a0a' }}
+          >
+            +
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0 w-20">
