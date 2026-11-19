@@ -15,7 +15,6 @@ interface Props {
 }
 
 const COR = {
-  bg: '#0a0a0b',
   surface: '#1a1a1c',
   surface2: '#222224',
   header: '#141416',
@@ -30,13 +29,35 @@ const COR = {
   disabledText: '#4b7a4b',
 }
 
+/** Unidades com 3 casas decimais (máscara: digitar → formatar automaticamente). */
+const MASKED_UNITS = new Set(['kg', 'l'])
+
+/**
+ * Formata string de dígitos em "inteiro,decimal" com 3 casas fixas.
+ * "2"    → "0,002"
+ * "200"  → "0,200"
+ * "2000" → "2,000"
+ * "1250" → "1,250"
+ */
+function formatMasked(digits: string): string {
+  if (!digits) return ''
+  const padded = digits.padStart(4, '0')
+  const intPart = parseInt(padded.slice(0, -3), 10).toString()
+  const decPart = padded.slice(-3)
+  return `${intPart},${decPart}`
+}
+
 export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: Props) {
-  const [quantidade, setQuantidade] = useState('')
+  // Para kg/l: apenas dígitos (máscara automática)
+  const [digits, setDigits] = useState('')
+  // Para g/ml: valor bruto do input numérico
+  const [rawQtd, setRawQtd] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (aberto) {
-      setQuantidade('')
+      setDigits('')
+      setRawQtd('')
       setTimeout(() => inputRef.current?.focus(), 60)
     }
   }, [aberto])
@@ -44,16 +65,50 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
   if (!aberto || !produto) return null
 
   const unidade = produto.unidade_medida
-  const step = unidade === 'kg' || unidade === 'l' ? '0.001' : '1'
-  const qtdNum = parseFloat(quantidade.replace(',', '.')) || 0
+  const isMasked = MASKED_UNITS.has(unidade)
+
+  const qtdNum = isMasked
+    ? (digits ? parseInt(digits, 10) / 1000 : 0)
+    : (parseFloat(rawQtd.replace(',', '.')) || 0)
+
+  const displayValue = isMasked ? formatMasked(digits) : rawQtd
   const total = qtdNum * produto.preco_venda
   const valido = qtdNum > 0
 
   const confirmar = () => { if (valido) onConfirmar(qtdNum) }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') confirmar()
-    if (e.key === 'Escape') onCancelar()
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') { confirmar(); return }
+    if (e.key === 'Escape') { onCancelar(); return }
+
+    if (!isMasked) return
+
+    if (e.key === 'Backspace') {
+      e.preventDefault()
+      setDigits(prev => prev.slice(0, -1))
+      return
+    }
+
+    if (/^\d$/.test(e.key)) {
+      e.preventDefault()
+      setDigits(prev => (prev + e.key).slice(-7)) // máx 9.999,999
+      return
+    }
+
+    // Bloqueia qualquer outra tecla no modo máscara (vírgula, ponto, letras…)
+    if (!['Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      e.preventDefault()
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isMasked) {
+      // Fallback para colar/mobile: extrai só os dígitos
+      const raw = e.target.value.replace(/\D/g, '').slice(-7)
+      setDigits(raw)
+    } else {
+      setRawQtd(e.target.value)
+    }
   }
 
   return (
@@ -87,22 +142,28 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
           <div>
             <label className="text-xs font-medium block mb-1.5" style={{ color: COR.muted }}>
               Quantidade <span style={{ color: COR.verde }}>({unidade})</span>
+              {isMasked && (
+                <span className="ml-2 font-normal" style={{ color: '#4b4b4d' }}>
+                  — digite os algarismos
+                </span>
+              )}
             </label>
             <div className="flex items-center gap-2">
               <input
                 ref={inputRef}
-                type="number"
-                step={step}
-                min="0"
-                value={quantidade}
-                onChange={e => setQuantidade(e.target.value)}
+                type={isMasked ? 'text' : 'number'}
+                inputMode="numeric"
+                step={isMasked ? undefined : '1'}
+                min={isMasked ? undefined : '0'}
+                value={displayValue}
+                onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                placeholder="0"
-                className="flex-1 px-4 py-3 rounded-xl text-xl font-mono font-bold text-center outline-none"
+                placeholder={isMasked ? '0,000' : '0'}
+                className="flex-1 px-4 py-3 rounded-xl text-2xl font-mono font-bold text-center outline-none"
                 style={{
                   background: COR.surface2,
                   border: `1px solid ${COR.border}`,
-                  color: COR.text,
+                  color: valido ? COR.text : COR.muted,
                 }}
               />
               <span
@@ -112,6 +173,14 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
                 {unidade}
               </span>
             </div>
+            {isMasked && (
+              <p className="text-[11px] mt-1.5 text-center" style={{ color: '#4b4b4d' }}>
+                Ex: digitar <kbd className="px-1 rounded" style={{ background: COR.surface2 }}>2</kbd>
+                <kbd className="px-1 rounded ml-0.5" style={{ background: COR.surface2 }}>0</kbd>
+                <kbd className="px-1 rounded ml-0.5" style={{ background: COR.surface2 }}>0</kbd>
+                → 0,200 {unidade}
+              </p>
+            )}
           </div>
 
           {/* Preview total */}
