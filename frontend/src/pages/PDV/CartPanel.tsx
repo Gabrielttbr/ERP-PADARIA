@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react'
 import { usePDVStore, CartItem } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
 import { stepParaUnidade, fmtQtd, isPeso } from '@/utils/formatQtd'
@@ -59,6 +60,25 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
   onUpdateQtd: (q: number) => void
   onRemove: () => void
 }) {
+  const [editando, setEditando] = useState(false)
+  const [inputVal, setInputVal] = useState('')
+  const editRef = useRef<HTMLInputElement>(null)
+
+  const peso = isPeso(item.unidade_medida)
+  const step = stepParaUnidade(item.unidade_medida)
+
+  const iniciarEdicao = () => {
+    setInputVal(item.quantidade.toFixed(3).replace('.', ','))
+    setEditando(true)
+    setTimeout(() => { editRef.current?.focus(); editRef.current?.select() }, 10)
+  }
+
+  const confirmarEdicao = () => {
+    const val = parseFloat(inputVal.replace(',', '.'))
+    if (val > 0) onUpdateQtd(val)
+    setEditando(false)
+  }
+
   return (
     <div
       onClick={onSelecionar}
@@ -74,15 +94,41 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
         </p>
       </div>
 
-      <div className="flex flex-col items-center gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
-        {isPeso(item.unidade_medida) && (
-          <span className="text-[11px] font-mono font-semibold" style={{ color: '#22c55e' }}>
-            {fmtQtd(item.quantidade, item.unidade_medida)}
-          </span>
+      <div className="flex flex-col items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+        {/* Quantidade formatada para peso — clicável para editar */}
+        {peso && (
+          editando ? (
+            <input
+              ref={editRef}
+              type="text"
+              inputMode="decimal"
+              value={inputVal}
+              onChange={e => setInputVal(e.target.value)}
+              onBlur={confirmarEdicao}
+              onKeyDown={e => {
+                if (e.key === 'Enter') confirmarEdicao()
+                if (e.key === 'Escape') setEditando(false)
+                e.stopPropagation()
+              }}
+              className="text-xs font-mono font-bold text-center rounded-md px-1 outline-none w-20"
+              style={{ color: '#22c55e', background: '#1a2e1a', border: '1px solid rgba(34,197,94,0.4)' }}
+            />
+          ) : (
+            <span
+              onClick={iniciarEdicao}
+              title="Clique para editar"
+              className="text-xs font-mono font-bold cursor-text px-1.5 py-0.5 rounded-md"
+              style={{ color: '#22c55e', background: 'rgba(34,197,94,0.08)' }}
+            >
+              {fmtQtd(item.quantidade, item.unidade_medida)}
+            </span>
+          )
         )}
+
+        {/* Botões −/+ com input */}
         <div className="flex items-center gap-1">
           <button
-            onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - stepParaUnidade(item.unidade_medida)).toFixed(3))))}
+            onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - step).toFixed(3))))}
             className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
             style={{ background: '#2a2a2d', color: '#d1d5db' }}
           >
@@ -90,15 +136,15 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
           </button>
           <input
             type="number"
-            step={stepParaUnidade(item.unidade_medida)}
+            step={step}
             min="0"
             value={item.quantidade}
             onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
-            className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
-            style={{ color: '#f5f5f5' }}
+            className="text-center bg-transparent font-mono font-semibold text-sm outline-none"
+            style={{ color: '#f5f5f5', width: peso ? '52px' : '36px' }}
           />
           <button
-            onClick={() => onUpdateQtd(parseFloat((item.quantidade + stepParaUnidade(item.unidade_medida)).toFixed(3)))}
+            onClick={() => onUpdateQtd(parseFloat((item.quantidade + step).toFixed(3)))}
             className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
             style={{ background: '#22c55e', color: '#0a0a0a' }}
           >
