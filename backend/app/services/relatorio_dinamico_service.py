@@ -38,6 +38,12 @@ _DIMENSOES = {
     "cliente": lambda: func.coalesce(Cliente.nome, "Sem cliente").label("cliente"),
 }
 
+# Colunas extras que acompanham certas dimensões automaticamente.
+# Incluídas no SELECT e GROUP BY sem precisar ser pedidas pelo usuário.
+_DIMENSAO_EXTRAS: dict[str, list] = {
+    "produto": [Produto.unidade_medida.label("unidade_medida")],
+}
+
 _METRICAS_SQL = {
     "quantidade": lambda: func.sum(ItemVenda.quantidade).label("quantidade"),
     "faturamento": lambda: func.sum(ItemVenda.total_item).label("faturamento"),
@@ -98,10 +104,11 @@ async def gerar_relatorio(
         metricas_sql = metricas_sql + ["num_vendas"]  # busca por baixo dos panos pro cálculo do ticket
 
     colunas_dim = [_DIMENSOES[d]() for d in dimensoes]
+    extras = [col for d in dimensoes for col in _DIMENSAO_EXTRAS.get(d, [])]
     colunas_met = [_METRICAS_SQL[m]() for m in metricas_sql]
 
     stmt = (
-        select(*colunas_dim, *colunas_met)
+        select(*colunas_dim, *extras, *colunas_met)
         .select_from(Venda)
         .join(ItemVenda, ItemVenda.venda_id == Venda.id)
         .join(Produto, Produto.id == ItemVenda.produto_id)
@@ -111,7 +118,7 @@ async def gerar_relatorio(
         .join(Caixa, Caixa.id == SessaoCaixa.caixa_id)
         .outerjoin(Cliente, Cliente.id == Venda.cliente_id)
         .where(Venda.status == "concluida")
-        .group_by(*colunas_dim)
+        .group_by(*colunas_dim, *extras)
         .order_by(*colunas_dim)
     )
 
@@ -135,7 +142,8 @@ async def gerar_relatorio(
         stmt = stmt.where(Venda.cliente_id == filtros.cliente_id)
 
     result = await db.execute(stmt)
-    colunas_nome = dimensoes + metricas_sql
+    nomes_extras = [col.key for col in extras]
+    colunas_nome = dimensoes + nomes_extras + metricas_sql
     linhas = []
     for row in result.all():
         linha = dict(zip(colunas_nome, row))

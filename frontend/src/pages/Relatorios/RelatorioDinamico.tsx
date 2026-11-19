@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
+import { fmtQtd } from '@/utils/formatQtd'
 
 const LABEL_DIMENSAO: Record<string, string> = {
   dia: 'Dia', categoria: 'Categoria', produto: 'Produto',
@@ -11,6 +12,8 @@ const LABEL_METRICA: Record<string, string> = {
   quantidade: 'Quantidade', faturamento: 'Faturamento', custo: 'Custo',
   lucro: 'Lucro', num_vendas: 'Nº de vendas', ticket_medio: 'Ticket médio',
 }
+// Colunas extras retornadas pelo backend mas não mostradas como colunas independentes
+const COLUNAS_OCULTAS = new Set(['unidade_medida'])
 
 const IconLoading = () => (
   <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -98,8 +101,18 @@ export default function RelatorioDinamico() {
     }
   }
 
-  const colunas = linhas && linhas.length > 0 ? Object.keys(linhas[0]) : []
+  const colunas = linhas && linhas.length > 0
+    ? Object.keys(linhas[0]).filter(c => !COLUNAS_OCULTAS.has(c))
+    : []
   const rotulo = (c: string) => LABEL_DIMENSAO[c] ?? LABEL_METRICA[c] ?? c
+
+  const fmtCelula = (linha: Record<string, any>, col: string): string => {
+    if (col === 'quantidade') {
+      const unit = linha['unidade_medida'] ?? 'un'
+      return fmtQtd(parseFloat(String(linha[col])), unit)
+    }
+    return String(linha[col])
+  }
 
   return (
     <div className="space-y-5">
@@ -174,7 +187,7 @@ export default function RelatorioDinamico() {
                 {linhas.map((linha, i) => (
                   <tr key={i} style={{ background: i % 2 === 0 ? 'transparent' : 'var(--clr-surface, rgba(0,0,0,0.02))', borderTop: '1px solid var(--clr-border)' }}>
                     {colunas.map(c => (
-                      <td key={c} className="px-4 py-2" style={{ color: 'var(--clr-text)' }}>{String(linha[c])}</td>
+                      <td key={c} className="px-4 py-2" style={{ color: 'var(--clr-text)' }}>{fmtCelula(linha, c)}</td>
                     ))}
                   </tr>
                 ))}

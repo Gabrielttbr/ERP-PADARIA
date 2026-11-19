@@ -1,5 +1,6 @@
 import { usePDVStore, CartItem } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
+import { fmtQtd, stepParaUnidade } from '@/utils/formatQtd'
 
 interface Props {
   selecionado: number | null
@@ -68,12 +69,17 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
 
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-sm leading-tight truncate" style={{ color: '#f5f5f5' }}>{item.nome}</p>
-        <p className="text-xs mt-0.5" style={{ color: '#22c55e' }}>{formatBRL(item.preco_unit)} <span style={{ color: '#8b8b8f' }}>/ {item.unidade_medida}</span></p>
+        <p className="text-xs mt-0.5" style={{ color: '#22c55e' }}>
+          {formatBRL(item.preco_unit)} <span style={{ color: '#8b8b8f' }}>/ {item.unidade_medida}</span>
+        </p>
+        <p className="text-[11px] mt-0.5 font-mono" style={{ color: '#6b7280' }}>
+          {fmtQtd(item.quantidade, item.unidade_medida)}
+        </p>
       </div>
 
       <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
         <button
-          onClick={() => onUpdateQtd(item.quantidade - 1)}
+          onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - stepParaUnidade(item.unidade_medida)).toFixed(3))))}
           className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
           style={{ background: '#2a2a2d', color: '#d1d5db' }}
         >
@@ -81,13 +87,15 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
         </button>
         <input
           type="number"
+          step={stepParaUnidade(item.unidade_medida)}
+          min="0"
           value={item.quantidade}
           onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
-          className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
+          className="w-12 text-center bg-transparent font-mono font-semibold text-sm outline-none"
           style={{ color: '#f5f5f5' }}
         />
         <button
-          onClick={() => onUpdateQtd(item.quantidade + 1)}
+          onClick={() => onUpdateQtd(parseFloat((item.quantidade + stepParaUnidade(item.unidade_medida)).toFixed(3)))}
           className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
           style={{ background: '#22c55e', color: '#0a0a0a' }}
         >

@@ -116,6 +116,7 @@ def _build_venda_read(venda: Venda) -> VendaRead:
                 id=item.id,
                 produto_id=item.produto_id,
                 produto_nome=item.produto.nome if item.produto else "",
+                unidade_medida=item.produto.unidade_medida if item.produto else "un",
                 quantidade=item.quantidade,
                 preco_unit=item.preco_unit,
                 custo_unit=item.custo_unit,

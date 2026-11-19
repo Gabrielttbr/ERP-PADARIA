@@ -31,6 +31,7 @@ class ItemVendaRead(BaseModel):
     id: int
     produto_id: int
     produto_nome: str
+    unidade_medida: str
     quantidade: Decimal
     preco_unit: Decimal
     custo_unit: Decimal

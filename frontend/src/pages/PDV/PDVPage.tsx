@@ -12,8 +12,10 @@ import CartPanel from './CartPanel'
 import PaymentModal from './PaymentModal'
 import ClienteModal from './ClienteModal'
 import DiversoModal from './DiversoModal'
+import PesoModal from './PesoModal'
 import SessaoGuard from './SessaoGuard'
 import { useIsMobile } from '@/Mobile/Android/useIsMobile'
+import { isPeso } from '@/utils/formatQtd'
 
 const COR = {
   bg: '#0a0a0b', surface: '#141416', surface2: '#1a1a1c', surface3: '#222224',
@@ -160,6 +162,7 @@ export default function PDVPage() {
   const [showClienteModal, setShowClienteModal] = useState(false)
   const [showDesconto, setShowDesconto] = useState(false)
   const [showDiverso, setShowDiverso] = useState(false)
+  const [produtoPeso, setProdutoPeso] = useState<any>(null)
   const [descontoInput, setDescontoInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoriaSel, setCategoriaSel] = useState<number | null>(null)
@@ -182,9 +185,15 @@ export default function PDVPage() {
   }, [todosProdutos, categoriaSel, searchTerm])
 
   const addProduto = useCallback((p: any) => {
-    // Se for produto Diverso (código 999), abre modal em vez de adicionar
+    // Produto Diverso (código 999): abre modal de preço livre
     if (p.codigo_barras === '999') {
       setShowDiverso(true)
+      return
+    }
+
+    // Produto vendido por peso/volume: abre modal para informar a quantidade
+    if (isPeso(p.unidade_medida)) {
+      setProdutoPeso(p)
       return
     }
 
@@ -461,6 +470,28 @@ export default function PDVPage() {
           toast.success('DIVERSO adicionado', { position: 'bottom-center', duration: 1200 })
         }}
         onCancelar={() => setShowDiverso(false)}
+      />
+
+      <PesoModal
+        aberto={!!produtoPeso}
+        produto={produtoPeso ? {
+          nome: produtoPeso.nome,
+          preco_venda: parseFloat(produtoPeso.preco_venda),
+          unidade_medida: produtoPeso.unidade_medida,
+        } : null}
+        onConfirmar={(quantidade) => {
+          const p = produtoPeso
+          store.addItem({
+            produto_id: p.id, nome: p.nome,
+            preco_unit: parseFloat(p.preco_venda),
+            custo_unit: parseFloat(p.preco_custo ?? 0),
+            quantidade, desconto_unit: 0,
+            unidade_medida: p.unidade_medida,
+          })
+          setProdutoPeso(null)
+          toast.success(p.nome, { position: 'bottom-center', duration: 1200 })
+        }}
+        onCancelar={() => setProdutoPeso(null)}
       />
     </SessaoGuard>
   )

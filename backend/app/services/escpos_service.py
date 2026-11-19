@@ -80,13 +80,21 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
     def fmt_brl(value: Decimal) -> str:
         return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+    def fmt_qtd(qtd: Decimal, unit: str) -> str:
+        # kg e l: 3 casas com vírgula BR  → "1,250 kg", "0,500 l"
+        # demais: sem zeros à direita       → "200 g", "3 un"
+        if unit in ("kg", "l"):
+            return f"{qtd:.3f}".replace(".", ",") + f" {unit}"
+        return f"{qtd:g} {unit}"
+
     def item_line(nome: str, qtd: Decimal, unit: str, preco: Decimal, total: Decimal) -> bytes:
         # Ex: "Pão Francês         2 un  R$ 0,60   R$ 1,20"
-        qtd_str = f"{qtd:g} {unit}"
+        # Ex: "Cebola           0,200 kg  R$ 5,90   R$ 1,18"
+        qtd_str = fmt_qtd(qtd, unit)
         preco_str = fmt_brl(preco)
         total_str = fmt_brl(total)
         nome_truncated = nome[:int(cols * 0.45)]
-        line = f"{nome_truncated:<{int(cols*0.45)}} {qtd_str:>8} {preco_str:>9} {total_str:>9}"
+        line = f"{nome_truncated:<{int(cols*0.45)}} {qtd_str:>10} {preco_str:>9} {total_str:>9}"
         return ALIGN_LEFT + enc_line(line[:cols])
 
     def totals_line(label: str, value: str) -> bytes:
