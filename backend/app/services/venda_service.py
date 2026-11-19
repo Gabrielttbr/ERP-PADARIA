@@ -44,9 +44,13 @@ async def criar_venda(
     itens_calculados = []
     for item_in in payload.itens:
         produto = produtos_db[item_in.produto_id]
-        _validar_estoque(produto, item_in.quantidade)
 
-        preco_unit = produto.preco_venda
+        # Permite venda sem estoque para produto Diverso (código 999)
+        if produto.codigo_barras != "999":
+            _validar_estoque(produto, item_in.quantidade)
+
+        # Usa preco_unit customizado se fornecido (para produtos diversos), senão usa o do produto
+        preco_unit = item_in.preco_unit if item_in.preco_unit is not None else produto.preco_venda
         custo_unit = produto.preco_custo
         desconto_unit = item_in.desconto_unit.quantize(TWO, ROUND_HALF_UP)
         total_item = ((preco_unit - desconto_unit) * item_in.quantidade).quantize(TWO, ROUND_HALF_UP)

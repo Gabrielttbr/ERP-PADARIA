@@ -22,6 +22,7 @@ interface PDVState {
 
   setSessaoId: (id: number | null) => void
   addItem: (item: Omit<CartItem, 'total_item'>) => void
+  addDiversoItem: (preco: number, quantidade: number) => void
   updateQuantidade: (produto_id: number, quantidade: number) => void
   removeItem: (produto_id: number) => void
   clearCart: () => void
@@ -64,6 +65,26 @@ export const usePDVStore = create<PDVState>((set, get) => ({
       }
       const total_item = item.quantidade * (item.preco_unit - item.desconto_unit)
       return { cart: [...state.cart, { ...item, total_item }] }
+    }),
+
+  addDiversoItem: (preco, quantidade) =>
+    set((state) => {
+      // Usa ID temporário único (900000+) para não agrupar itens diversos diferentes
+      // O ID real (17) será enviado ao backend com preco_unit customizado
+      const timestamp = Date.now()
+      const uniqueId = 900000 + (timestamp % 100000)
+
+      const item: CartItem = {
+        produto_id: uniqueId,
+        nome: 'DIVERSO',
+        preco_unit: preco,
+        custo_unit: 0,
+        quantidade,
+        desconto_unit: 0,
+        unidade_medida: 'un',
+        total_item: preco * quantidade,
+      }
+      return { cart: [...state.cart, item] }
     }),
 
   updateQuantidade: (produto_id, quantidade) =>

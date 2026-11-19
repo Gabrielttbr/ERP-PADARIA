@@ -11,6 +11,7 @@ import { formatBRL } from '@/utils/currency'
 import CartPanel from './CartPanel'
 import PaymentModal from './PaymentModal'
 import ClienteModal from './ClienteModal'
+import DiversoModal from './DiversoModal'
 import SessaoGuard from './SessaoGuard'
 import { useIsMobile } from '@/Mobile/Android/useIsMobile'
 
@@ -158,6 +159,7 @@ export default function PDVPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showClienteModal, setShowClienteModal] = useState(false)
   const [showDesconto, setShowDesconto] = useState(false)
+  const [showDiverso, setShowDiverso] = useState(false)
   const [descontoInput, setDescontoInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoriaSel, setCategoriaSel] = useState<number | null>(null)
@@ -180,6 +182,12 @@ export default function PDVPage() {
   }, [todosProdutos, categoriaSel, searchTerm])
 
   const addProduto = useCallback((p: any) => {
+    // Se for produto Diverso (código 999), abre modal em vez de adicionar
+    if (p.codigo_barras === '999') {
+      setShowDiverso(true)
+      return
+    }
+
     store.addItem({
       produto_id: p.id, nome: p.nome, preco_unit: parseFloat(p.preco_venda),
       custo_unit: parseFloat(p.preco_custo ?? 0), quantidade: 1, desconto_unit: 0, unidade_medida: p.unidade_medida,
@@ -187,6 +195,11 @@ export default function PDVPage() {
   }, [store])
 
   const handleScan = useCallback(async (codigo: string) => {
+    // Detecta código 999 (produto diverso)
+    if (codigo === '999') {
+      setShowDiverso(true); setSearchTerm(''); return
+    }
+
     const local = todosProdutos.find((p: any) => p.codigo_barras === codigo)
     if (local) { addProduto(local); toast.success(local.nome, { position: 'bottom-center', duration: 1200 }); setSearchTerm(''); return }
     try {
@@ -258,7 +271,19 @@ export default function PDVPage() {
                   style={{ background: COR.surface2, border: `1px solid ${COR.border}`, color: COR.text }}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && filteredProdutos.length === 1) { addProduto(filteredProdutos[0]); setSearchTerm('') } }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      // Se for código 999, abre modal diverso
+                      if (searchTerm.trim() === '999') {
+                        setShowDiverso(true)
+                        setSearchTerm('')
+                      } else if (filteredProdutos.length === 1) {
+                        // Caso contrário, adiciona o produto normalmente
+                        addProduto(filteredProdutos[0])
+                        setSearchTerm('')
+                      }
+                    }
+                  }}
                 />
               </div>
 
@@ -407,7 +432,16 @@ export default function PDVPage() {
               {
                 sessao_id: store.sessaoId,
                 cliente_id: store.clienteId,
-                itens: store.cart.map((item) => ({ produto_id: item.produto_id, quantidade: item.quantidade, desconto_unit: item.desconto_unit })),
+                itens: store.cart.map((item) => {
+                  // Se for item diverso (produto_id >= 900000), envia ID real (17) com preco_unit customizado
+                  const isDiverso = item.produto_id >= 900000
+                  return {
+                    produto_id: isDiverso ? 17 : item.produto_id, // ID real do DIVERSO é 17
+                    quantidade: item.quantidade,
+                    desconto_unit: item.desconto_unit,
+                    ...(isDiverso && { preco_unit: item.preco_unit })
+                  }
+                }),
                 pagamentos,
                 desconto_valor: store.desconto,
                 desconto_pct: store.descontoPct,
@@ -418,6 +452,16 @@ export default function PDVPage() {
           }}
         />
       )}
+
+      <DiversoModal
+        aberto={showDiverso}
+        onConfirmar={(preco, quantidade) => {
+          store.addDiversoItem(preco, quantidade)
+          setShowDiverso(false)
+          toast.success('DIVERSO adicionado', { position: 'bottom-center', duration: 1200 })
+        }}
+        onCancelar={() => setShowDiverso(false)}
+      />
     </SessaoGuard>
   )
 }

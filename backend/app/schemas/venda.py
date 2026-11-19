@@ -10,12 +10,20 @@ class ItemVendaCreate(BaseModel):
     produto_id: int
     quantidade: Decimal
     desconto_unit: Decimal = Decimal("0.00")
+    preco_unit: Optional[Decimal] = None  # Para produtos diversos (código 999)
 
     @field_validator("quantidade")
     @classmethod
     def quantidade_positiva(cls, v: Decimal) -> Decimal:
         if v <= 0:
             raise ValueError("Quantidade deve ser maior que zero")
+        return v
+
+    @field_validator("preco_unit")
+    @classmethod
+    def preco_unit_valido(cls, v: Optional[Decimal]) -> Optional[Decimal]:
+        if v is not None and v < 0:
+            raise ValueError("Preço não pode ser negativo")
         return v
 
 

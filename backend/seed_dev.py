@@ -106,6 +106,19 @@ async def seed():
             ))
         print(f"OK {len(produtos_data)} produtos criados")
 
+        # Produto Diverso (código 999) para itens não cadastrados
+        db.add(Produto(
+            codigo_barras="999", sku=None, nome="DIVERSO",
+            categoria_id=7, fornecedor_id=None,
+            unidade_medida="un",
+            preco_custo=Decimal("0.00"),
+            preco_venda=Decimal("0.00"),
+            estoque_atual=Decimal("999999.000"),
+            estoque_minimo=Decimal("0.000"),
+            ativo=True, created_at=now, updated_at=now,
+        ))
+        print("OK produto DIVERSO (999) criado")
+
         await db.commit()
         print("\nDONE Seed concluído! Acesse http://localhost:8000/api/docs")
         print("   Login: admin@padaria.com / Admin@1234")
