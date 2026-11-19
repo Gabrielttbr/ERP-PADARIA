@@ -102,6 +102,11 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
         </div>
 
         {/* Display numérico */}
+        <style>{`
+          @keyframes cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+          .peso-cursor { animation: cursor-blink 1s step-end infinite; }
+        `}</style>
+
         <div
           className="rounded-xl px-4 py-5 flex items-center justify-center gap-3 cursor-text"
           style={{ background: '#111113', border: '1px solid rgba(255,255,255,0.06)' }}
@@ -123,6 +128,7 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
           >
             {displayValue || (isMasked ? '0,000' : '0')}
           </span>
+          <span className="peso-cursor text-3xl font-mono font-thin" style={{ color: '#22c55e' }}>|</span>
           <span className="text-lg font-semibold" style={{ color: '#4b5563' }}>
             {unidade}
           </span>
