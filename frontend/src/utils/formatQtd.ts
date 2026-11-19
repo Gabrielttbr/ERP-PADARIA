@@ -16,8 +16,8 @@ export function fmtQtd(qty: number, unit: string): string {
 
 /** Passo dos botões +/− no carrinho baseado na unidade do produto. */
 export function stepParaUnidade(unit: string): number {
-  if (unit === 'kg' || unit === 'l') return 0.1
-  if (unit === 'g' || unit === 'ml') return 50
+  if (unit === 'kg' || unit === 'l') return 0.001  // 1g / 1ml por clique
+  if (unit === 'g' || unit === 'ml') return 1
   return 1
 }
 
