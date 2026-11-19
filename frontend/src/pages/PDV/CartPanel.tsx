@@ -1,6 +1,6 @@
 import { usePDVStore, CartItem } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
-import { fmtQtd, stepParaUnidade } from '@/utils/formatQtd'
+import { stepParaUnidade } from '@/utils/formatQtd'
 
 interface Props {
   selecionado: number | null
@@ -72,9 +72,6 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
         <p className="text-xs mt-0.5" style={{ color: '#22c55e' }}>
           {formatBRL(item.preco_unit)} <span style={{ color: '#8b8b8f' }}>/ {item.unidade_medida}</span>
         </p>
-        <p className="text-[11px] mt-0.5 font-mono" style={{ color: '#6b7280' }}>
-          {fmtQtd(item.quantidade, item.unidade_medida)}
-        </p>
       </div>
 
       <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
@@ -91,7 +88,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
           min="0"
           value={item.quantidade}
           onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
-          className="w-12 text-center bg-transparent font-mono font-semibold text-sm outline-none"
+          className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
           style={{ color: '#f5f5f5' }}
         />
         <button
