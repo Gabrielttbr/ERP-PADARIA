@@ -45,6 +45,15 @@ export default function SessaoGuard({ children }: Props) {
     }
   )
 
+  const abrirCaixa = () => {
+    if (abrirCaixaMutation.isLoading) return
+    if (!caixaAuto) return toast.error('Nenhum caixa disponível')
+    abrirCaixaMutation.mutate({
+      caixa_id: caixaAuto.id,
+      valor_abertura: valorAbertura.float,
+    })
+  }
+
   if (checkingSession) {
     return (
       <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#0a0a0b' }}>
@@ -96,7 +105,14 @@ export default function SessaoGuard({ children }: Props) {
                 type="text"
                 inputMode="numeric"
                 value={valorAbertura.display}
-                onKeyDown={valorAbertura.onKeyDown}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    abrirCaixa()
+                    return
+                  }
+                  valorAbertura.onKeyDown(e)
+                }}
                 onChange={() => {}}
                 className="w-full mt-1 px-3 py-3 rounded-xl h-14 text-2xl font-mono text-center outline-none"
                 style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
@@ -105,13 +121,7 @@ export default function SessaoGuard({ children }: Props) {
             </div>
 
             <button
-              onClick={() => {
-                if (!caixaAuto) return toast.error('Nenhum caixa disponível')
-                abrirCaixaMutation.mutate({
-                  caixa_id: caixaAuto.id,
-                  valor_abertura: valorAbertura.float,
-                })
-              }}
+              onClick={abrirCaixa}
               disabled={abrirCaixaMutation.isLoading || !caixaAuto}
               className="w-full py-3 rounded-xl text-base font-bold transition-colors disabled:opacity-40"
               style={{ background: '#22c55e', color: '#0a0a0a' }}
