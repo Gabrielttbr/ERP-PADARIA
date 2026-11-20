@@ -18,3 +18,4 @@ export const test = base.extend<Fixtures>({
 
 export { expect }
 export { brl, reBrl, digitarValor } from './dinheiro'
+export { linhaEstoque, kpi } from './telas'

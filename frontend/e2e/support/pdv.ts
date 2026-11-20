@@ -1,11 +1,11 @@
 import { expect, type Page, type Locator } from '@playwright/test'
-import { digitarValor } from './dinheiro'
+import { digitarValor, INTERVALO_TECLA_MS } from './dinheiro'
 
 type Forma = 'Dinheiro' | 'Crédito' | 'Débito' | 'PIX'
 
 /** Page object do PDV (/pdv): abertura de caixa, carrinho e pagamento. */
 export class Pdv {
-  constructor(private page: Page) {}
+  constructor(readonly page: Page) {}
 
   async abrir() {
     await this.page.goto('/pdv')
@@ -42,7 +42,10 @@ export class Pdv {
     await this.page.getByRole('button').filter({ hasText: nome }).first().click()
     const campo = this.page.getByTestId('peso-valor')
     await expect(campo).toBeVisible()
-    for (const d of digitos) await campo.press(d)
+    for (const d of digitos) {
+      await campo.press(d)
+      await this.page.waitForTimeout(INTERVALO_TECLA_MS)
+    }
     await campo.press('Enter')
     await expect(campo).toBeHidden()
   }

@@ -11,6 +11,10 @@ export function reBrl(valor: number): RegExp {
   return new RegExp(`R\\$\\s*${num}(?!\\d)`)
 }
 
+/** Intervalo entre teclas: digitação humana. Mais rápido que isso, o
+ * useBarcodeScanner do PDV confunde a digitação com um código bipado. */
+export const INTERVALO_TECLA_MS = 80
+
 /**
  * Digita um valor num campo de moeda do app (useCurrencyInput), que aceita só
  * teclas de dígito e desloca os centavos: "20,00" → teclas 2,0,0,0.
@@ -21,5 +25,8 @@ export async function digitarValor(campo: Locator, valor: string | number): Prom
     : valor.replace(/\D/g, '')
   await campo.click()
   for (let i = 0; i < 12; i++) await campo.press('Backspace')
-  for (const d of centavos) await campo.press(d)
+  for (const d of centavos) {
+    await campo.press(d)
+    await campo.page().waitForTimeout(INTERVALO_TECLA_MS)
+  }
 }
