@@ -390,7 +390,7 @@ Funcionalidade: Indicadores financeiros do dashboard
     Então "Lucro Bruto" deve ser R$ 38,50
 
   Cenário: Margem média é lucro sobre faturamento líquido
-    Então "Margem Média" deve ser 54,61%
+    Então "Margem Média" deve ser 54,61% (a tela mostra com 1 casa: "54.6%")
 
   Cenário: Venda cancelada não entra em nenhum indicador
     Quando cancelo a venda V3 (R$ 22,50)
@@ -753,26 +753,87 @@ Funcionalidade: Horário do sistema em São Paulo
 
 ## 10. Pontos de atenção encontrados na leitura do código
 
-Achei estes pontos lendo o código. Os cenários `@bug-suspeito` acima servem para confirmar cada um.
+P1–P9 vieram da leitura do código; P10–P15 foram encontrados pelos testes E2E. A coluna **E2E** diz como cada um aparece na suíte do Playwright: `test.fail` = falha esperada (fica verde enquanto o bug existir e avisa quando for corrigido); `skip` = sem tela para testar.
 
 | #     | Onde                                                           | O que acontece hoje                                                                                                                                                                                                                    | Impacto                                                                                                                                                        |
 | ----- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P1 ✅ | `caixa_service.fechar_caixa`                                 | **Corrigido.** O saldo esperado somava **todas** as formas (PIX/cartão também). Agora é abertura + dinheiro − sangrias + suprimentos, no fechamento, na validação da sangria e na tela do caixa (com resumo por forma) | Diferenças gravadas em fechamentos **antigos** continuam erradas                                                                                         |
 | P2 ✅ | `venda_service` / resumo do fechamento                       | **Corrigido.** `Pagamento.valor` gravava o valor **entregue** (20,00) em vez do líquido do troco (18,00). Agora grava o líquido, o recibo continua mostrando o entregue, e PIX/cartão/vale acima do total é recusado | Vendas **antigas** continuam com o valor inflado no banco                                                                                                |
-| P3    | `dashboard_service.curva_abc`                                | O filtro de status/período está no `JOIN` de `Venda`, mas soma `ItemVenda.total_item` de qualquer jeito                                                                                                                        | Curva ABC soma vendas **canceladas** e **de outros períodos**                                                                                     |
+| P3    | `dashboard_service.curva_abc`                                | O filtro de status/período está no `JOIN` de `Venda`, mas soma `ItemVenda.total_item` de qualquer jeito                                                                                                                        | Curva ABC soma vendas **canceladas** e **de outros períodos**. **Confirmado pelo E2E** (`10-curva-abc`, `test.fail`): Café aparece com 7 un / R$ 35,00 em vez de 3 un / R$ 15,00 |
 | P4 ✅ | `vendas_por_dia` e dimensão `dia` do relatório dinâmico | **Corrigido.** Agrupava por `date(created_at)` em **UTC**; agora todas as datas são gravadas no horário de São Paulo (`agora()` em `utils/tempo.py`) | Vendas **antigas** (antes da mudança) continuam em UTC: as das 21h–24h aparecem no dia seguinte |
-| P5    | `calcular_kpis` → `itens_vendidos=int(...)`               | Soma kg + un e trunca pra inteiro                                                                                                                                                                                                      | 0,750 kg vira 0; misturar kg com unidade não dá um número que signifique algo                                                                               |
-| P6    | `calcular_kpis(caixa_id=...)`                                | Parâmetro recebido mas não usado no filtro                                                                                                                                                                                           | Filtro por caixa no dashboard não muda os KPIs                                                                                                                |
+| P5    | `calcular_kpis` → `itens_vendidos=int(...)`               | Soma kg + un e trunca pra inteiro                                                                                                                                                                                                      | 0,750 kg vira 0; misturar kg com unidade não dá um número que signifique algo. **Confirmado pelo E2E** (`06-dashboard`, `test.fail`) |
+| P6    | `calcular_kpis(caixa_id=...)`                                | Parâmetro recebido mas não usado no filtro                                                                                                                                                                                           | Filtro por caixa no dashboard não muda os KPIs. O dashboard também **não tem filtro de caixa na tela** (`06-dashboard`, `skip`) |
 | P7    | `Produto.margem_lucro` × "Margem Média"                    | Produto usa markup sobre o custo; dashboard usa margem sobre a venda                                                                                                                                                                   | Mesmo nome ("margem"), contas diferentes: o usuário pode estranhar                                                                                            |
 | P8 ✅ | `relatorio_service._buscar_vendas` (PDF/Excel) | **Corrigido.** Com as datas gravadas no horário local, o `datetime.combine` passou a estar certo e bate com o dashboard. O "Gerado em" também usa a hora local | Mesmo efeito do P4 nos registros antigos |
-| P9    | `pdvStore` × backend                                        | Carrinho não arredonda cada item, o backend arredonda                                                                                                                                                                                 | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg                                                                                 |
+| P9    | `pdvStore` × backend                                        | Carrinho não arredonda cada item, o backend arredonda                                                                                                                                                                                 | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg. **Não reproduzido** nos casos do E2E (0,333 kg → R$ 5,33 na tela e na venda) |
+| P10   | `PDVPage.tsx` (toast de erro da venda) | Quando a API responde 422 de validação, `detail` vem como **lista** e o `toast.error` tenta renderizar o objeto: o React quebra e o PDV fica com **tela branca** (ex.: desconto maior que o subtotal → total 0) | Operador perde a tela e o carrinho. `02-pdv-desconto`, `test.fail` |
+| P11   | `PDVPage.tsx` (item Diverso) | O PDV envia o Diverso com `produto_id` **17 fixo no código** | Em qualquer instalação onde o Diverso não tenha id 17, a venda avulsa falha ou registra o produto errado. O seed E2E cria o Diverso com id 17 |
+| P12   | `PaymentModal.tsx` (pagamento único em dinheiro) | Valor recebido **menor que o total** é aceito: o PDV envia `max(valor digitado, total)` | Operador digita R$ 15,00 numa conta de R$ 18,00 e a venda fecha como paga. `03-pdv-pagamento`, `test.fail` |
+| P13   | `PaymentModal.tsx` (pagamento dividido) | O botão "+ Adicionar pagamento parcial" só aparece **depois** que já existe um pagamento | Não há como lançar o primeiro pagamento parcial: **pagamento dividido é impossível pela tela**. `03-pdv-pagamento`, `test.fail` |
+| P14   | `RelatorioDinamico.tsx` (coluna Quantidade) | Sem a dimensão produto, a unidade cai no padrão `un` | Relatório por categoria mostra "1,750 un" para Pães (vendido em kg). Cosmético |
+| P15   | `EstoquePage.tsx` ("Margem estimada") | Calcula com `form.preco_venda/preco_custo`, mas os campos de preço gravam em outro estado | No cadastro a margem estimada **nunca aparece**; na edição não acompanha a digitação. `11-estoque`, `test.fail` |
 
 ---
 
-## 11. Como automatizar (próximo passo)
+## 11. Testes automatizados (E2E com Playwright)
 
-- Backend já tem `pytest` + `tests/factories.py`. Dá para adicionar `pytest-bdd`, salvar cada
-  bloco acima como `backend/tests/features/<nome>.feature` e escrever os *steps* com as factories.
-- Os cenários `@manual` (botões +/−, modal de peso, Enter, maquineta padrão) cabem melhor em
-  Playwright/Cypress no frontend, ou em `pdvStore.test.ts` para a lógica do carrinho.
-- Rodar primeiro os `@bug-suspeito`: se falharem, viram issues; se passarem, minha leitura estava errada.
+Os cenários acima estão automatizados em `frontend/e2e/`, validando **pelo frontend** como o operador
+usa. Cada `Cenário` é um `test()` e cada Dado/Quando/Então é um `test.step()` com o mesmo texto.
+
+### Como rodar
+
+```bash
+cd frontend
+npm run e2e                     # suíte completa (~5 min)
+npm run e2e -- --grep @caixa    # só um domínio (tags do Gherkin)
+npm run e2e:ui                  # modo interativo
+npm run e2e:report              # relatório HTML com traces das falhas
+```
+
+O Playwright sobe sozinho um backend de teste (porta **8001**, SQLite próprio em
+`<tmp>/erp-padaria-e2e/`, impressora em arquivo, `TZ=UTC`) e um Vite (porta **5174**). Não usa o
+banco nem o `.env` de desenvolvimento, e pode rodar com o ambiente de dev aberto.
+
+Cada spec reseta o banco com `backend/tests/e2e_seed.py`:
+
+| Perfil | Conteúdo |
+|---|---|
+| `base` | massa de dados da seção 0 (sem vendas, sem caixa aberto) |
+| `dia-d` | base + roteiro do dia D (V1–V4, sangria, suprimento), caixa aberto |
+| `noite` | base + venda de R$ 10,00 ontem às 22:30 |
+| `dia-d-e-ontem` | dia D + venda de R$ 10,00 ontem às 22:30 |
+
+### Mapa seção → arquivo
+
+| Seção | Arquivo | Testes |
+|---|---|---:|
+| Fluxo dourado (dia D inteiro pelo PDV) | `00-roteiro-dia-d.spec.ts` | 1 |
+| 1. Carrinho | `01-pdv-carrinho.spec.ts` | 17 |
+| 1. Desconto | `02-pdv-desconto.spec.ts` | 4 |
+| 1. Pagamento | `03-pdv-pagamento.spec.ts` | 8 |
+| 1. Cancelamento | `04-pdv-cancelamento.spec.ts` | 2 |
+| 2. Caixa | `05-caixa.spec.ts` | 12 |
+| 3–4. Dashboard | `06-dashboard.spec.ts` | 17 |
+| 5. Vendas por dia, PDF/Excel | `07-vendas-dia.spec.ts` | 5 |
+| 6. Relatório por produto | `08-relatorio-produto.spec.ts` | 5 |
+| 7. Relatório por categoria | `09-relatorio-categoria.spec.ts` | 3 |
+| 8. Curva ABC | `10-curva-abc.spec.ts` | 4 |
+| 9. Estoque | `11-estoque.spec.ts` | 16 |
+| 9.1 Horário | `12-horario.spec.ts` | 4 |
+| Smoke (login + dashboard) | `smoke.spec.ts` | 1 |
+
+Resultado atual: **97 passando** (9 delas falhas esperadas: P3 ×4, P5, P10, P12, P13 e P15) e
+**2 pulados** (P6 e filtro por produto, sem tela).
+
+### Adaptações em relação ao Gherkin
+
+- **Sem tela no sistema:** cancelar venda, desconto em %, abrir uma 2ª sessão no mesmo caixa e
+  "não cancela venda já cancelada". A ação vai pela API e o efeito é conferido na tela.
+- **"Venda feita hoje às 22:30":** não dá para controlar o relógio do servidor, então o seed grava a
+  venda **ontem** às 22:30 e o teste filtra pelo dia de ontem.
+- **"Fechamento: resumo deve mostrar…":** a tela mostra o resumo por forma **antes** de fechar. Na
+  hora de fechar, ela só exibe um aviso com a diferença; os demais campos são conferidos na resposta
+  da API que a tela recebe.
+- **Valores monetários do relatório dinâmico** aparecem sem formatação ("15.00").
+- **Digitação em ritmo humano** (80 ms entre teclas): mais rápido que isso, o leitor de código de
+  barras do PDV confunde a digitação com um código bipado.
