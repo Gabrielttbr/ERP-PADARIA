@@ -80,10 +80,10 @@ const NAV_GROUPS = [
     items: [
       { to: '/dashboard',  icon: <IconDashboard />,  label: 'Dashboard',      perfis: ['admin','gerente','super_admin'],                mobileHide: false },
       { to: '/estoque',    icon: <IconEstoque />,    label: 'Estoque',         perfis: ['admin','gerente','estoquista','super_admin'],   mobileHide: true },
-      { to: '/compras',    icon: <IconCompras />,    label: 'Compras',         perfis: ['admin','gerente','estoquista','super_admin'],   mobileHide: true },
-      { to: '/clientes',   icon: <IconClientes />,   label: 'Clientes',         perfis: ['admin','gerente','caixa','super_admin'],           mobileHide: false },
+     // { to: '/compras',    icon: <IconCompras />,    label: 'Compras',         perfis: ['admin','gerente','estoquista','super_admin'],   mobileHide: true },
+      // { to: '/clientes',   icon: <IconClientes />,   label: 'Clientes',         perfis: ['admin','gerente','caixa','super_admin'],           mobileHide: false },
       { to: '/relatorios', icon: <IconRelatorios />, label: 'Relatórios',      perfis: ['admin','gerente','super_admin'],                mobileHide: false },
-      { to: '/financeiro', icon: <IconFinanceiro />, label: 'Financeiro',     perfis: ['admin','gerente','super_admin'],                mobileHide: false },
+      // { to: '/financeiro', icon: <IconFinanceiro />, label: 'Financeiro',     perfis: ['admin','gerente','super_admin'],                mobileHide: false },
     ],
   },
   {
