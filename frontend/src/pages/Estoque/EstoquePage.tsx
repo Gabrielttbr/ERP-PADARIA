@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
+import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 import ImportarExcelModal from './ImportarExcelModal'
 
 interface Produto {
@@ -189,6 +190,8 @@ export default function EstoquePage() {
   const [showForm, setShowForm]     = useState(false)
   const [editando, setEditando]     = useState<Produto | null>(null)
   const [form, setForm]             = useState({ ...emptyForm })
+  const precoVenda = useCurrencyInput()
+  const precoCusto = useCurrencyInput()
   const [confirmDel, setConfirmDel] = useState<Produto | null>(null)
   const [showCategorias, setShowCategorias] = useState(false)
   const [novaCategoria, setNovaCategoria]   = useState('')
@@ -360,6 +363,7 @@ export default function EstoquePage() {
   function abrirNovo() {
     setEditando(null)
     setForm({ ...emptyForm })
+    precoVenda.reset(); precoCusto.reset()
     setShowForm(true)
     setTimeout(() => barcodeInputRef.current?.focus(), 100)
   }
@@ -374,11 +378,12 @@ export default function EstoquePage() {
       preco_venda: String(p.preco_venda),
       preco_custo: String(p.preco_custo),
       unidade_medida: p.unidade_medida,
-      // Strip trailing zeros so "5.000" shows as "5", not "five thousand" in PT-BR
       estoque_atual: String(parseFloat(String(p.estoque_atual))),
       estoque_minimo: String(parseFloat(String(p.estoque_minimo))),
       descricao: '',
     })
+    precoVenda.set(parseFloat(String(p.preco_venda)) || 0)
+    precoCusto.set(parseFloat(String(p.preco_custo)) || 0)
     setShowForm(true)
   }
 
@@ -386,20 +391,21 @@ export default function EstoquePage() {
     setShowForm(false)
     setEditando(null)
     setForm({ ...emptyForm })
+    precoVenda.reset(); precoCusto.reset()
   }
 
   function salvar() {
     if (!form.nome.trim()) return toast.error('Nome é obrigatório')
     if (!form.categoria_id) return toast.error('Selecione uma categoria')
-    if (!form.preco_venda || parseFloat(form.preco_venda) <= 0) return toast.error('Preço de venda inválido')
+    if (precoVenda.float <= 0) return toast.error('Preço de venda inválido')
 
     const payload: any = {
       nome: form.nome.trim(),
       codigo_barras: form.codigo_barras.trim() || undefined,
       fabricante: form.fabricante.trim() || undefined,
       categoria_id: parseInt(form.categoria_id),
-      preco_venda: parseFloat(form.preco_venda),
-      preco_custo: parseFloat(form.preco_custo) || 0,
+      preco_venda: precoVenda.float,
+      preco_custo: precoCusto.float,
       unidade_medida: form.unidade_medida,
       estoque_minimo: parseQtd(form.estoque_minimo),
     }
@@ -706,27 +712,25 @@ export default function EstoquePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label">Preço de Venda (R$) *</label>
+                  <label className="label">Preço de Venda *</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={form.preco_venda}
-                    onChange={e => setForm(f => ({ ...f, preco_venda: e.target.value }))}
+                    type="text"
+                    inputMode="numeric"
+                    value={precoVenda.display}
+                    onKeyDown={precoVenda.onKeyDown}
+                    onChange={() => {}}
                     className="input font-mono text-right"
-                    placeholder="0.00"
                   />
                 </div>
                 <div>
-                  <label className="label">Preço de Custo (R$)</label>
+                  <label className="label">Preço de Custo</label>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.preco_custo}
-                    onChange={e => setForm(f => ({ ...f, preco_custo: e.target.value }))}
+                    type="text"
+                    inputMode="numeric"
+                    value={precoCusto.display}
+                    onKeyDown={precoCusto.onKeyDown}
+                    onChange={() => {}}
                     className="input font-mono text-right"
-                    placeholder="0.00"
                   />
                 </div>
               </div>

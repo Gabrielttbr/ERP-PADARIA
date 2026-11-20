@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { formatBRL } from '@/utils/currency'
+import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 
 interface Payment { forma: string; valor: number; nsu?: string }
 
@@ -46,32 +47,30 @@ function labelPagamento(pg: Payment): string {
 export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: Props) {
   const [pagamentos, setPagamentos] = useState<Payment[]>([])
   const [formaAtual, setFormaAtual] = useState('dinheiro')
-  const [valorAtual, setValorAtual] = useState('')
+  const valorAtual = useCurrencyInput()
   const [maquineta,  setMaquineta]  = useState<string | null>(null)
 
   const totalPago = useMemo(() => pagamentos.reduce((a, p) => a + p.valor, 0), [pagamentos])
   const restante  = useMemo(() => parseFloat(Math.max(0, total - totalPago).toFixed(2)), [total, totalPago])
 
-  const valorNumerico = useMemo(() => parseFloat(valorAtual) || 0, [valorAtual])
   const troco = useMemo(() => {
     if (formaAtual !== 'dinheiro') return 0
-    const tmp = totalPago + valorNumerico
+    const tmp = totalPago + valorAtual.float
     return tmp > total ? parseFloat((tmp - total).toFixed(2)) : 0
-  }, [valorAtual, totalPago, total, formaAtual])
+  }, [valorAtual.float, totalPago, total, formaAtual])
 
   useEffect(() => {
-    if (restante > 0) setValorAtual(restante.toFixed(2))
-    else setValorAtual('')
+    valorAtual.set(restante > 0 ? restante : 0)
     setMaquineta(null)
   }, [formaAtual])
 
   const maquinetaOk = !isCard(formaAtual) || !!maquineta
 
   const addPagamento = () => {
-    const valor = parseFloat(valorAtual)
+    const valor = valorAtual.float
     if (!valor || valor <= 0 || !maquinetaOk) return
     setPagamentos(prev => [...prev, { forma: formaAtual, valor, nsu: maquineta ?? undefined }])
-    setValorAtual('')
+    valorAtual.reset()
     setMaquineta(null)
   }
 
@@ -82,9 +81,9 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     if (pagamentos.length === 0) {
       let valor: number
       if (formaAtual === 'dinheiro') {
-        valor = valorNumerico > 0 ? Math.max(valorNumerico, total) : total
+        valor = valorAtual.float > 0 ? Math.max(valorAtual.float, total) : total
       } else {
-        valor = valorNumerico > 0 ? valorNumerico : total
+        valor = valorAtual.float > 0 ? valorAtual.float : total
       }
       onConfirm([{ forma: formaAtual, valor, nsu: maquineta ?? undefined }])
     } else {
@@ -96,7 +95,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     ? totalPago >= total
     : formaAtual === 'dinheiro'
       ? true
-      : valorNumerico >= total
+      : valorAtual.float >= total
   ) && maquinetaOk
 
   return (
@@ -162,16 +161,14 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
           <div>
             <label className="text-xs font-semibold" style={{ color: '#9ca3af' }}>Valor recebido (R$)</label>
             <input
-              type="number"
-              value={valorAtual}
-              onChange={e => setValorAtual(e.target.value)}
+              type="text"
+              inputMode="numeric"
+              value={valorAtual.display}
+              onKeyDown={e => { valorAtual.onKeyDown(e); if (e.key === 'Enter') handleConfirm() }}
+              onChange={() => {}}
               className="w-full mt-1 px-3 py-3 rounded-xl text-center font-mono font-bold text-2xl outline-none"
               style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
-              placeholder={restante > 0 ? restante.toFixed(2) : total.toFixed(2)}
               autoFocus
-              onKeyDown={e => { if (e.key === 'Enter') handleConfirm() }}
-              step="0.01"
-              min="0"
             />
           </div>
 

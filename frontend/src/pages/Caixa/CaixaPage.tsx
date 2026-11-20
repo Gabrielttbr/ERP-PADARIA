@@ -5,6 +5,7 @@ import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
 import { format } from 'date-fns'
 import { usePDVStore } from '@/store/pdvStore'
+import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 
 const IconClose = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -75,11 +76,11 @@ export default function CaixaPage() {
   const [showSangria,    setShowSangria]    = useState(false)
   const [showSuprimento, setShowSuprimento] = useState(false)
   const [showFechar,     setShowFechar]     = useState(false)
-  const [valorSangria,   setValorSangria]   = useState('')
+  const valorSangria    = useCurrencyInput()
   const [motivoSangria,  setMotivoSangria]  = useState('')
-  const [valorSup,       setValorSup]       = useState('')
+  const valorSup        = useCurrencyInput()
   const [motivoSup,      setMotivoSup]      = useState('')
-  const [valorFechamento, setValorFechamento] = useState('')
+  const valorFechamento = useCurrencyInput()
   const { sessaoId, setSessaoId }           = usePDVStore()
   const queryClient                          = useQueryClient()
 
@@ -221,11 +222,12 @@ export default function CaixaPage() {
             <div>
               <label className="label">Valor (R$)</label>
               <input
-                type="number" step="0.01" min="0.01"
-                value={valorSangria}
-                onChange={e => setValorSangria(e.target.value)}
+                type="text" inputMode="numeric"
+                value={valorSangria.display}
+                onKeyDown={valorSangria.onKeyDown}
+                onChange={() => {}}
                 className="input text-xl font-mono text-center h-14"
-                placeholder="0.00" autoFocus
+                autoFocus
               />
             </div>
             <div>
@@ -241,8 +243,8 @@ export default function CaixaPage() {
             <div className="flex gap-3 pt-1">
               <button onClick={() => setShowSangria(false)} className="btn-bakery flex-1">Cancelar</button>
               <button
-                onClick={() => sangriaM.mutate({ valor: parseFloat(valorSangria), motivo: motivoSangria })}
-                disabled={!valorSangria || !motivoSangria || sangriaM.isLoading}
+                onClick={() => sangriaM.mutate({ valor: valorSangria.float, motivo: motivoSangria })}
+                disabled={!valorSangria.float || !motivoSangria || sangriaM.isLoading}
                 className="btn-danger flex-1"
               >
                 {sangriaM.isLoading ? 'Registrando...' : 'Confirmar Sangria'}
@@ -259,11 +261,12 @@ export default function CaixaPage() {
             <div>
               <label className="label">Valor (R$)</label>
               <input
-                type="number" step="0.01" min="0.01"
-                value={valorSup}
-                onChange={e => setValorSup(e.target.value)}
+                type="text" inputMode="numeric"
+                value={valorSup.display}
+                onKeyDown={valorSup.onKeyDown}
+                onChange={() => {}}
                 className="input text-xl font-mono text-center h-14"
-                placeholder="0.00" autoFocus
+                autoFocus
               />
             </div>
             <div>
@@ -280,18 +283,17 @@ export default function CaixaPage() {
               <button onClick={() => { setShowSuprimento(false); setValorSup(''); setMotivoSup('') }} className="btn-bakery flex-1">Cancelar</button>
               <button
                 onClick={() => {
-                  const v = parseFloat(valorSup)
-                  if (!v || !motivoSup) return
-                  api.post(`/caixa/${sessaoId}/suprimento`, { valor: v, motivo: motivoSup })
+                  if (!valorSup.float || !motivoSup) return
+                  api.post(`/caixa/${sessaoId}/suprimento`, { valor: valorSup.float, motivo: motivoSup })
                     .then(() => {
                       toast.success('Suprimento registrado')
                       setShowSuprimento(false)
-                      setValorSup(''); setMotivoSup('')
+                      valorSup.reset(); setMotivoSup('')
                       queryClient.invalidateQueries('sessao-ativa')
                     })
                     .catch((e: any) => toast.error(e.response?.data?.detail || 'Erro'))
                 }}
-                disabled={!valorSup || !motivoSup}
+                disabled={!valorSup.float || !motivoSup}
                 className="btn-action flex-1"
               >
                 Confirmar Suprimento
@@ -311,17 +313,18 @@ export default function CaixaPage() {
             <div>
               <label className="label">Valor em espécie no caixa (R$)</label>
               <input
-                type="number" step="0.01"
-                value={valorFechamento}
-                onChange={e => setValorFechamento(e.target.value)}
+                type="text" inputMode="numeric"
+                value={valorFechamento.display}
+                onKeyDown={valorFechamento.onKeyDown}
+                onChange={() => {}}
                 className="input text-xl font-mono text-center h-14"
-                placeholder="0.00" autoFocus
+                autoFocus
               />
             </div>
             <div className="flex gap-3 pt-1">
               <button onClick={() => setShowFechar(false)} className="btn-bakery flex-1">Cancelar</button>
               <button
-                onClick={() => fecharM.mutate({ valor_fechamento: parseFloat(valorFechamento) || 0 })}
+                onClick={() => fecharM.mutate({ valor_fechamento: valorFechamento.float })}
                 disabled={fecharM.isLoading}
                 className="btn-danger flex-1"
               >

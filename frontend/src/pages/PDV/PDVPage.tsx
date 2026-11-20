@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useEmpresaStore } from '@/store/empresaStore'
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner'
 import { formatBRL } from '@/utils/currency'
+import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 import CartPanel from './CartPanel'
 import PaymentModal from './PaymentModal'
 import ClienteModal from './ClienteModal'
@@ -172,7 +173,7 @@ export default function PDVPage() {
   const [showDesconto, setShowDesconto] = useState(false)
   const [showDiverso, setShowDiverso] = useState(false)
   const [produtoPeso, setProdutoPeso] = useState<any>(null)
-  const [descontoInput, setDescontoInput] = useState('')
+  const descontoInput = useCurrencyInput()
   const [searchTerm, setSearchTerm] = useState('')
   const [cardFocusIdx, setCardFocusIdx] = useState<number>(-1)
   const [categoriaSel, setCategoriaSel] = useState<number | null>(null)
@@ -272,8 +273,8 @@ export default function PDVPage() {
   const total = store.total()
 
   const aplicarDesconto = () => {
-    store.setDesconto(parseFloat(descontoInput.replace(',', '.')) || 0)
-    setShowDesconto(false); setDescontoInput('')
+    store.setDesconto(descontoInput.float)
+    setShowDesconto(false); descontoInput.reset()
   }
 
   return (
@@ -399,13 +400,14 @@ export default function PDVPage() {
                 {showDesconto ? (
                   <div className="flex gap-2 items-center">
                     <input
-                      type="number" step="0.01" autoFocus
-                      placeholder="Desconto em R$"
+                      type="text"
+                      inputMode="numeric"
+                      autoFocus
                       className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
                       style={{ background: COR.surface2, border: `1px solid ${COR.border}`, color: COR.text }}
-                      value={descontoInput}
-                      onChange={e => setDescontoInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') aplicarDesconto(); if (e.key === 'Escape') setShowDesconto(false) }}
+                      value={descontoInput.display}
+                      onChange={() => {}}
+                      onKeyDown={e => { descontoInput.onKeyDown(e); if (e.key === 'Enter') aplicarDesconto(); if (e.key === 'Escape') setShowDesconto(false) }}
                     />
                     <button onClick={aplicarDesconto} className="px-3 py-2 rounded-lg text-sm font-bold" style={{ background: COR.verde, color: '#0a0a0a' }}>OK</button>
                   </div>

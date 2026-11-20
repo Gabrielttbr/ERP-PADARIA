@@ -1,15 +1,15 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { usePDVStore } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
+import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 
 interface Props { children: React.ReactNode }
 
 export default function SessaoGuard({ children }: Props) {
-  const [valorAbertura, setValorAbertura] = useState('0.00')
+  const valorAbertura = useCurrencyInput()
   const { sessaoId, setSessaoId }         = usePDVStore()
   const queryClient                       = useQueryClient()
   const navigate                          = useNavigate()
@@ -93,14 +93,13 @@ export default function SessaoGuard({ children }: Props) {
             <div>
               <label className="text-xs font-semibold" style={{ color: '#9ca3af' }}>Fundo de caixa (R$)</label>
               <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={valorAbertura}
-                onChange={e => setValorAbertura(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={valorAbertura.display}
+                onKeyDown={valorAbertura.onKeyDown}
+                onChange={() => {}}
                 className="w-full mt-1 px-3 py-3 rounded-xl h-14 text-2xl font-mono text-center outline-none"
                 style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
-                placeholder="0.00"
                 autoFocus
               />
             </div>
@@ -110,7 +109,7 @@ export default function SessaoGuard({ children }: Props) {
                 if (!caixaAuto) return toast.error('Nenhum caixa disponível')
                 abrirCaixaMutation.mutate({
                   caixa_id: caixaAuto.id,
-                  valor_abertura: parseFloat(valorAbertura) || 0,
+                  valor_abertura: valorAbertura.float,
                 })
               }}
               disabled={abrirCaixaMutation.isLoading || !caixaAuto}
