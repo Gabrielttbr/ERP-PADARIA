@@ -60,7 +60,11 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
   }, [valorAtual.float, totalPago, total, formaAtual])
 
   useEffect(() => {
-    valorAtual.set(restante > 0 ? restante : 0)
+    if (formaAtual === 'dinheiro') {
+      valorAtual.reset()
+    } else {
+      valorAtual.set(restante > 0 ? restante : 0)
+    }
     setMaquineta(null)
   }, [formaAtual])
 
@@ -159,12 +163,27 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
           )}
 
           <div>
-            <label className="text-xs font-semibold" style={{ color: '#9ca3af' }}>Valor recebido (R$)</label>
+            <label className="text-xs font-semibold flex items-center justify-between" style={{ color: '#9ca3af' }}>
+              <span>Valor recebido</span>
+              <span style={{ color: 'rgba(156,163,175,0.4)', fontWeight: 400 }}>← → mudar forma</span>
+            </label>
             <input
               type="text"
               inputMode="numeric"
               value={valorAtual.display}
-              onKeyDown={e => { valorAtual.onKeyDown(e); if (e.key === 'Enter') handleConfirm() }}
+              onKeyDown={e => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                  e.preventDefault()
+                  const idx = FORMAS.findIndex(f => f.key === formaAtual)
+                  const next = e.key === 'ArrowRight'
+                    ? (idx + 1) % FORMAS.length
+                    : (idx - 1 + FORMAS.length) % FORMAS.length
+                  setFormaAtual(FORMAS[next].key)
+                  return
+                }
+                valorAtual.onKeyDown(e)
+                if (e.key === 'Enter') handleConfirm()
+              }}
               onChange={() => {}}
               className="w-full mt-1 px-3 py-3 rounded-xl text-center font-mono font-bold text-2xl outline-none"
               style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
