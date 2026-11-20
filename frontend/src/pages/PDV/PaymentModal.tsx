@@ -65,7 +65,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     } else {
       valorAtual.set(restante > 0 ? restante : 0)
     }
-    setMaquineta(null)
+    setMaquineta(isCard(formaAtual) ? MAQUINETAS[0] : null)
   }, [formaAtual])
 
   useEffect(() => {
