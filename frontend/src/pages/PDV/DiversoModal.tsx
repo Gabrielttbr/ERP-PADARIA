@@ -90,6 +90,7 @@ export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props)
               min="0"
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmar() }}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
             />
           </div>
