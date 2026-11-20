@@ -766,12 +766,13 @@ P1–P9 vieram da leitura do código; P10–P15 foram encontrados pelos testes E
 | P7    | `Produto.margem_lucro` × "Margem Média"                    | Produto usa markup sobre o custo; dashboard usa margem sobre a venda                                                                                                                                                                   | Mesmo nome ("margem"), contas diferentes: o usuário pode estranhar                                                                                            |
 | P8 ✅ | `relatorio_service._buscar_vendas` (PDF/Excel) | **Corrigido.** Com as datas gravadas no horário local, o `datetime.combine` passou a estar certo e bate com o dashboard. O "Gerado em" também usa a hora local | Mesmo efeito do P4 nos registros antigos |
 | P9    | `pdvStore` × backend                                        | Carrinho não arredonda cada item, o backend arredonda                                                                                                                                                                                 | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg. **Não reproduzido** nos casos do E2E (0,333 kg → R$ 5,33 na tela e na venda) |
-| P10   | `PDVPage.tsx` (toast de erro da venda) | Quando a API responde 422 de validação, `detail` vem como **lista** e o `toast.error` tenta renderizar o objeto: o React quebra e o PDV fica com **tela branca** (ex.: desconto maior que o subtotal → total 0) | Operador perde a tela e o carrinho. `02-pdv-desconto`, `test.fail` |
+| P10 ✅ | toasts de erro (38 pontos em 15 telas) | **Corrigido.** O `detail` de erro 422 vem como lista e o `toast.error` quebrava o React (tela branca). Agora toda mensagem passa por `mensagemErro()` (`src/utils/erro.ts`), e o PDV recusa desconto maior que o subtotal | `02-pdv-desconto` cobre o desconto recusado e um erro 422 real da API |
 | P11   | `PDVPage.tsx` (item Diverso) | O PDV envia o Diverso com `produto_id` **17 fixo no código** | Em qualquer instalação onde o Diverso não tenha id 17, a venda avulsa falha ou registra o produto errado. O seed E2E cria o Diverso com id 17 |
-| P12   | `PaymentModal.tsx` (pagamento único em dinheiro) | Valor recebido **menor que o total** é aceito: o PDV envia `max(valor digitado, total)` | Operador digita R$ 15,00 numa conta de R$ 18,00 e a venda fecha como paga. `03-pdv-pagamento`, `test.fail` |
+| P12 ✅ | `PaymentModal.tsx` (pagamento único em dinheiro) | **Corrigido.** Valor digitado menor que o total era trocado pelo total em silêncio. Agora mostra "Faltam R$ X" e não deixa confirmar; campo vazio continua valendo o valor exato (atalho do Enter) | `03-pdv-pagamento` confere tela e banco (nenhuma venda gravada) |
 | P13   | `PaymentModal.tsx` (pagamento dividido) | O botão "+ Adicionar pagamento parcial" só aparece **depois** que já existe um pagamento | Não há como lançar o primeiro pagamento parcial: **pagamento dividido é impossível pela tela**. `03-pdv-pagamento`, `test.fail` |
 | P14   | `RelatorioDinamico.tsx` (coluna Quantidade) | Sem a dimensão produto, a unidade cai no padrão `un` | Relatório por categoria mostra "1,750 un" para Pães (vendido em kg). Cosmético |
 | P15   | `EstoquePage.tsx` ("Margem estimada") | Calcula com `form.preco_venda/preco_custo`, mas os campos de preço gravam em outro estado | No cadastro a margem estimada **nunca aparece**; na edição não acompanha a digitação. `11-estoque`, `test.fail` |
+| P16   | `routers/categorias.py` (criar) | A API não valida nome duplicado. **SQLite** (instalação Windows): a 2ª "Pães" é criada. **PostgreSQL** (Docker): só o índice barra, com erro 500; e como a exclusão é lógica, recriar uma categoria excluída também dá 500 | `11-estoque`, `test.fail` (o E2E roda em SQLite, então o caso "recriar após excluir" passa lá e falha só no PostgreSQL) |
 
 ---
 
@@ -809,8 +810,8 @@ Cada spec reseta o banco com `backend/tests/e2e_seed.py`:
 |---|---|---:|
 | Fluxo dourado (dia D inteiro pelo PDV) | `00-roteiro-dia-d.spec.ts` | 1 |
 | 1. Carrinho | `01-pdv-carrinho.spec.ts` | 17 |
-| 1. Desconto | `02-pdv-desconto.spec.ts` | 4 |
-| 1. Pagamento | `03-pdv-pagamento.spec.ts` | 8 |
+| 1. Desconto | `02-pdv-desconto.spec.ts` | 5 |
+| 1. Pagamento | `03-pdv-pagamento.spec.ts` | 9 |
 | 1. Cancelamento | `04-pdv-cancelamento.spec.ts` | 2 |
 | 2. Caixa | `05-caixa.spec.ts` | 12 |
 | 3–4. Dashboard | `06-dashboard.spec.ts` | 17 |
@@ -818,12 +819,22 @@ Cada spec reseta o banco com `backend/tests/e2e_seed.py`:
 | 6. Relatório por produto | `08-relatorio-produto.spec.ts` | 5 |
 | 7. Relatório por categoria | `09-relatorio-categoria.spec.ts` | 3 |
 | 8. Curva ABC | `10-curva-abc.spec.ts` | 4 |
-| 9. Estoque | `11-estoque.spec.ts` | 16 |
+| 9. Estoque | `11-estoque.spec.ts` | 17 |
 | 9.1 Horário | `12-horario.spec.ts` | 4 |
 | Smoke (login + dashboard) | `smoke.spec.ts` | 1 |
 
-Resultado atual: **97 passando** (9 delas falhas esperadas: P3 ×4, P5, P10, P12, P13 e P15) e
+Resultado atual: **100 passando** (8 delas falhas esperadas: P3 ×4, P5, P13, P15 e P16) e
 **2 pulados** (P6 e filtro por produto, sem tela).
+
+### Conferência no banco
+
+Além da tela, os fluxos principais conferem o que foi **gravado**, com `consultarBanco()`
+(`e2e/support/banco.ts`, SQLite em modo somente leitura): venda (subtotal, desconto, total, troco),
+itens (preço e custo congelados), pagamentos (forma, valor líquido do troco, maquineta), sessão de
+caixa (totais, valor contado, diferença), movimentações de caixa e de estoque (saldo antes/depois) e
+cadastro de produto/categoria. O roteiro dourado confere todas as tabelas do dia D no final.
+
+Isso pega bugs em que a tela mostra o certo e o banco grava o errado, como era o P2.
 
 ### Adaptações em relação ao Gherkin
 
