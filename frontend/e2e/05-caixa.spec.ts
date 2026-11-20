@@ -1,4 +1,4 @@
-import { test, expect, reBrl, kpi, TelaCaixa } from './support'
+import { test, expect, reBrl, kpi, TelaCaixa, consultarBanco, sessaoGravada } from './support'
 
 /** cenarios_testes.md — 2. Caixa · Funcionalidade: Sessão de caixa */
 test.describe('Sessão de caixa @caixa', () => {
@@ -52,6 +52,13 @@ test.describe('Sessão de caixa @caixa', () => {
     await test.step('Então o total de sangrias deve ser R$ 30,00', () => expect(caixa.linhaGaveta('Sangrias')).toContainText(reBrl(30)))
     await test.step('E o total de suprimentos deve ser R$ 50,00', () => expect(caixa.linhaGaveta('Suprimentos')).toContainText(reBrl(50)))
     await test.step('E o esperado na gaveta deve ser R$ 120,00', () => expect(caixa.esperado).toHaveText(reBrl(120)))
+    await test.step('E no banco: totais da sessão e as duas movimentações com motivo', () => {
+      expect(sessaoGravada()).toMatchObject({ total_sangrias: 30, total_suprimentos: 50 })
+      expect(consultarBanco('select tipo, valor, motivo from movimentacoes_caixa order by id')).toEqual([
+        { tipo: 'sangria', valor: 30, motivo: 'depósito' },
+        { tipo: 'suprimento', valor: 50, motivo: 'troco' },
+      ])
+    })
   })
 
   test('Sangria maior que o saldo é recusada', async ({ page, pdv }) => {
@@ -61,6 +68,7 @@ test.describe('Sessão de caixa @caixa', () => {
     await test.step('Quando tento registrar uma sangria de R$ 150,00', () => caixa.sangria(150))
     await test.step('Então devo receber erro "Saldo insuficiente para sangria"', () =>
       expect(page.getByText('Saldo insuficiente para sangria')).toBeVisible())
+    await test.step('E nenhuma sangria é gravada', () => expect(consultarBanco('select count(*) as n from movimentacoes_caixa')).toEqual([{ n: 0 }]))
   })
 
   test('Sangria não pode usar dinheiro de PIX ou cartão', async ({ page, pdv }) => {
@@ -122,6 +130,9 @@ test.describe('Fechamento de caixa @caixa @fechamento', () => {
     await test.step('Quando fecho o caixa informando R$ 138,00 contados na gaveta', () => caixa.fechar(138))
     await test.step('Então a diferença deve ser R$ 0,00', () =>
       expect(page.getByText(/Caixa fechado\. Diferença: R\$\s*0,00/)).toBeVisible())
+    await test.step('E no banco a sessão fica fechada com 138,00 contados e diferença 0', () =>
+      expect(sessaoGravada()).toEqual({ status: 'fechado', valor_abertura: 100, valor_fechamento: 138, total_vendas: 70.5,
+        total_sangrias: 30, total_suprimentos: 50, diferenca: 0 }))
   })
 
   test('Fechamento com falta de dinheiro', async ({ page }) => {
@@ -130,6 +141,8 @@ test.describe('Fechamento de caixa @caixa @fechamento', () => {
     await test.step('Quando fecho o caixa informando R$ 135,00', () => caixa.fechar(135))
     await test.step('Então a diferença deve ser negativa em R$ 3,00', () =>
       expect(page.getByText(/Caixa fechado\. Diferença: -R\$\s*3,00/)).toBeVisible())
+    await test.step('E no banco a diferença gravada é −3,00', () =>
+      expect(sessaoGravada()).toMatchObject({ status: 'fechado', valor_fechamento: 135, diferenca: -3 }))
   })
 
   test('Total do caixa fechado aparece no dashboard do dia', async ({ page }) => {

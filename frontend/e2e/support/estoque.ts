@@ -58,9 +58,15 @@ export class TelaEstoque {
     return this.page.locator(`[data-testid="categoria-item"][data-nome="${nome}"]`)
   }
 
-  async criarCategoria(nome: string, pai?: string) {
+  /** Cria a categoria e espera a resposta da API (e a lista recarregar). Devolve o status HTTP. */
+  async criarCategoria(nome: string, pai?: string): Promise<number> {
     if (pai) await this.page.getByTestId('categoria-pai').selectOption({ label: pai })
     await this.page.getByPlaceholder('Nova categoria...').fill(nome)
+    const resposta = this.page.waitForResponse(r => r.url().endsWith('/api/categorias') && r.request().method() === 'POST')
+    const recarga = this.page.waitForResponse(r => r.url().endsWith('/api/categorias') && r.request().method() === 'GET').catch(() => null)
     await this.page.getByRole('button', { name: 'Adicionar', exact: true }).click()
+    const status = (await resposta).status()
+    if (status < 400) await recarga
+    return status
   }
 }

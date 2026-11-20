@@ -1,4 +1,4 @@
-import { test, expect, reBrl, linhaEstoque } from './support'
+import { test, expect, reBrl, linhaEstoque, consultarBanco, sessaoGravada, estoqueGravado } from './support'
 
 /**
  * cenarios_testes.md — 1. PDV · Funcionalidade: Cancelamento de venda
@@ -45,11 +45,13 @@ test.describe('Cancelamento de venda @pdv @cancelamento', () => {
     await test.step('E o estoque do "Café Expresso" deve voltar a 97', async () => {
       await expect(await linhaEstoque(page, 'Café Expresso')).toContainText('97 un')
     })
-    await test.step('E deve existir uma movimentação de estoque do tipo "devolucao"', async () => {
-      const cafe = await api.produto('Café Expresso')
-      const movs = await api.get(`/estoque/movimentacoes?produto_id=${cafe.id}`)
-      const lista = Array.isArray(movs) ? movs : movs.items ?? movs.movimentacoes ?? []
-      expect(lista.some((m: any) => m.tipo === 'devolucao' && Number(m.referencia_id) === vendaId)).toBe(true)
+    await test.step('E no banco: venda cancelada com motivo, sessão de volta a 70,50 e devolução 93 → 97', () => {
+      expect(consultarBanco('select status, motivo_cancelamento from vendas where id = ?', [vendaId]))
+        .toEqual([{ status: 'cancelada', motivo_cancelamento: 'cliente desistiu' }])
+      expect(sessaoGravada().total_vendas).toBe(70.5)
+      const { estoque, movimentacoes } = estoqueGravado('Café Expresso')
+      expect(estoque).toBe(97)
+      expect(movimentacoes.at(-1)).toEqual({ tipo: 'devolucao', quantidade: 4, saldo_antes: 93, saldo_depois: 97, referencia_id: vendaId })
     })
   })
 

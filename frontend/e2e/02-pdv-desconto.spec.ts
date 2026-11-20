@@ -1,4 +1,4 @@
-import { test, expect, reBrl, kpi, linhaEstoque } from './support'
+import { test, expect, reBrl, kpi, linhaEstoque, consultarBanco, vendaGravada, ultimaVendaId } from './support'
 
 /** cenarios_testes.md — 1. PDV · Funcionalidade: Desconto na venda */
 test.describe('Desconto na venda @pdv @desconto', () => {
@@ -16,6 +16,12 @@ test.describe('Desconto na venda @pdv @desconto', () => {
     await test.step('Então o subtotal deve ser R$ 36,50', () => expect(pdv.subtotal).toHaveText(reBrl(36.5)))
     await test.step('E o desconto deve ser R$ 6,50', () => expect(pdv.page.getByTestId('cart-desconto')).toHaveText(reBrl(6.5)))
     await test.step('E o total deve ser R$ 30,00', () => expect(pdv.total).toHaveText(reBrl(30)))
+    await test.step('E, ao finalizar no PIX, o banco grava subtotal 36,50, desconto 6,50 e total 30,00', async () => {
+      await pdv.pagar('PIX')
+      const { venda, pagamentos } = vendaGravada(ultimaVendaId())
+      expect(venda).toMatchObject({ status: 'concluida', subtotal: 36.5, desconto_valor: 6.5, total: 30, troco: 0 })
+      expect(pagamentos).toEqual([{ forma: 'pix', valor: 30, nsu: null }])
+    })
   })
 
   test('Desconto percentual reduz o total (sem tela: ação via API)', async ({ page, api }) => {
@@ -31,6 +37,9 @@ test.describe('Desconto na venda @pdv @desconto', () => {
       venda = r.body
     })
     await test.step('Então o desconto calculado deve ser R$ 2,50', () => expect(Number(venda.desconto_valor)).toBe(2.5))
+    await test.step('E no banco: desconto 2,50 (10%) e total 22,50', () =>
+      expect(consultarBanco('select desconto_pct, desconto_valor, total from vendas where id = ?', [venda.id]))
+        .toEqual([{ desconto_pct: 10, desconto_valor: 2.5, total: 22.5 }]))
     await test.step('E o total deve ser R$ 22,50 (conferido no dashboard)', async () => {
       await page.goto('/dashboard')
       await expect(kpi(page, 'faturamento_bruto')).toHaveText(reBrl(25))
@@ -39,16 +48,17 @@ test.describe('Desconto na venda @pdv @desconto', () => {
   })
 
   test('Desconto maior que o subtotal é recusado', async ({ page, pdv }) => {
-    test.fail(true, 'P10 — o PDV fica com tela branca: a API responde 422 com detail em lista e o toast.error tenta renderizar o objeto')
     await test.step('Dado um carrinho com 1 "Café Expresso"', () => pdv.adicionar('Café Expresso'))
-    await test.step('Quando tento finalizar com desconto de R$ 6,00', async () => {
-      await pdv.desconto(6)
-      await pdv.pagar('Dinheiro', undefined, { esperarSucesso: false })
+    await test.step('Quando tento aplicar desconto de R$ 6,00', () => pdv.desconto(6))
+    await test.step('Então o desconto deve ser recusado com "Desconto não pode ser maior que o subtotal"', async () => {
+      await expect(page.getByText('Desconto não pode ser maior que o subtotal')).toBeVisible()
+      await expect(pdv.total).toHaveText(reBrl(5))
     })
-    await test.step('Então a venda deve ser recusada', async () => {
-      await expect(page.getByText('Venda concluída!')).toHaveCount(0)
-      await expect(pdv.item('Café Expresso')).toHaveCount(1) // carrinho continua
+    await test.step('E o PDV continua na tela, com o carrinho (P10: antes ficava em branco)', async () => {
+      await expect(pdv.busca).toBeVisible()
+      await expect(pdv.item('Café Expresso')).toHaveCount(1)
     })
+    await test.step('E nenhuma venda foi gravada', () => expect(consultarBanco('select count(*) as n from vendas')).toEqual([{ n: 0 }]))
     await test.step('E o estoque do "Café Expresso" não deve mudar', async () => {
       const linha = await linhaEstoque(page, 'Café Expresso')
       await expect(linha).toContainText('100 un')
@@ -64,5 +74,24 @@ test.describe('Desconto na venda @pdv @desconto', () => {
     })
     await test.step('Quando removo o desconto', () => pdv.desconto(0))
     await test.step('Então o total deve ser R$ 36,50', () => expect(pdv.total).toHaveText(reBrl(36.5)))
+  })
+
+  test('Erro de validação da API mostra a mensagem e não quebra a tela (P10)', async ({ page, pdv }) => {
+    await test.step('Dado um carrinho de R$ 5,00 com desconto de R$ 5,00 (total zero)', async () => {
+      await pdv.adicionar('Café Expresso')
+      await pdv.desconto(5)
+      await expect(pdv.total).toHaveText(reBrl(0))
+    })
+    await test.step('Quando tento finalizar (a API recusa com erro de validação 422 em lista)', async () => {
+      const resposta = page.waitForResponse(r => r.url().endsWith('/api/vendas') && r.request().method() === 'POST')
+      await pdv.pagar('Dinheiro', undefined, { esperarSucesso: false })
+      expect((await resposta).status()).toBe(422)
+    })
+    await test.step('Então vejo a mensagem da API em texto', () =>
+      expect(page.getByText('Valor do pagamento deve ser positivo')).toBeVisible())
+    await test.step('E o PDV continua funcionando (antes ficava com a tela branca)', async () => {
+      await expect(page.getByText('Total a pagar')).toBeVisible()
+      await expect(pdv.item('Café Expresso')).toHaveCount(1)
+    })
   })
 })

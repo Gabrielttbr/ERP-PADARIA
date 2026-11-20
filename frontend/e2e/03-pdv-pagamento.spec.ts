@@ -1,4 +1,4 @@
-import { test, expect, reBrl, kpi, linhaEstoque, digitarValor } from './support'
+import { test, expect, reBrl, kpi, linhaEstoque, digitarValor, consultarBanco, vendaGravada, ultimaVendaId, estoqueGravado } from './support'
 
 /** cenarios_testes.md — 1. PDV · Funcionalidade: Pagamento e finalização */
 test.describe('Pagamento e finalização @pdv @pagamento', () => {
@@ -18,10 +18,28 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
     })
     await test.step('Então o troco deve ser R$ 2,00', () => expect(page.getByTestId('pagamento-troco')).toHaveText(reBrl(2)))
     await test.step('E a venda deve ser concluída', () => pdv.confirmar())
+    await test.step('E no banco: total 18,00, troco 2,00 e pagamento em dinheiro de 18,00 (líquido do troco)', () => {
+      const { venda, pagamentos } = vendaGravada(ultimaVendaId())
+      expect(venda).toMatchObject({ status: 'concluida', total: 18, troco: 2 })
+      expect(pagamentos).toEqual([{ forma: 'dinheiro', valor: 18, nsu: null }])
+    })
+  })
+
+  test('Dinheiro sem valor digitado é o valor exato', async ({ pdv }) => {
+    await pdv.abrirCaixa(100)
+    await test.step('Dado um carrinho de R$ 18,00', async () => {
+      await pdv.adicionarPeso('Pão Francês', '500')
+      await pdv.adicionar('Café Expresso', 2)
+    })
+    await test.step('Quando confirmo em "Dinheiro" sem digitar o valor', () => pdv.pagar('Dinheiro'))
+    await test.step('Então a venda é gravada com pagamento exato de R$ 18,00 e sem troco', () => {
+      const { venda, pagamentos } = vendaGravada(ultimaVendaId())
+      expect(venda).toMatchObject({ total: 18, troco: 0 })
+      expect(pagamentos).toEqual([{ forma: 'dinheiro', valor: 18, nsu: null }])
+    })
   })
 
   test('Pagamento insuficiente é recusado', async ({ page, pdv }) => {
-    test.fail(true, 'P12 — em dinheiro, valor menor que o total é aceito: o PDV envia max(valor digitado, total) e a venda é concluída')
     await pdv.abrirCaixa(100)
     await test.step('Dado um carrinho de R$ 18,00', async () => {
       await pdv.adicionarPeso('Pão Francês', '500')
@@ -31,11 +49,15 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
       await pdv.abrirPagamento()
       await pdv.escolherForma('Dinheiro')
       await digitarValor(pdv.valorPagamento, 15)
-      const resposta = page.waitForResponse(r => r.url().endsWith('/api/vendas') && r.request().method() === 'POST', { timeout: 5000 }).catch(() => null)
-      await page.getByRole('button', { name: 'Confirmar Venda' }).click()
-      await resposta
     })
-    await test.step('Então a venda deve ser recusada (nada entra no caixa)', async () => {
+    await test.step('Então a venda deve ser recusada: "Faltam R$ 3,00" e "Confirmar Venda" desabilitado', async () => {
+      await expect(page.getByTestId('pagamento-falta')).toContainText(reBrl(3))
+      await expect(page.getByRole('button', { name: 'Confirmar Venda' })).toBeDisabled()
+      await pdv.valorPagamento.press('Enter') // Enter também não fecha a venda
+      await expect(page.getByText('Total a pagar')).toBeVisible()
+    })
+    await test.step('E nenhuma venda foi gravada', () => expect(consultarBanco('select count(*) as n from vendas')).toEqual([{ n: 0 }]))
+    await test.step('E nada entra no caixa', async () => {
       await page.goto('/caixa')
       await expect(page.getByTestId('caixa-total')).toContainText(reBrl(0))
     })
@@ -82,6 +104,10 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
       await expect(page.getByText('Selecione a maquineta para continuar')).toHaveCount(0)
       await expect(page.getByRole('button', { name: 'Confirmar Venda' })).toBeEnabled()
     })
+    await test.step('E, ao confirmar, o banco grava débito de R$ 22,50 na maquineta 1', async () => {
+      await pdv.confirmar()
+      expect(vendaGravada(ultimaVendaId()).pagamentos).toEqual([{ forma: 'cartao_debito', valor: 22.5, nsu: '1' }])
+    })
   })
 
   test('Finalizar venda baixa o estoque', async ({ page, pdv }) => {
@@ -98,6 +124,13 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
     await test.step('E o estoque do "Café Expresso" deve ser 98', async () => {
       await expect(await linhaEstoque(page, 'Café Expresso')).toContainText('98 un')
     })
+    await test.step('E deve existir uma movimentação "venda" para cada item, com os saldos certos (banco)', () => {
+      const id = ultimaVendaId()
+      expect(estoqueGravado('Pão Francês')).toEqual({ estoque: 19.5, movimentacoes: [
+        { tipo: 'venda', quantidade: 0.5, saldo_antes: 20, saldo_depois: 19.5, referencia_id: id }] })
+      expect(estoqueGravado('Café Expresso')).toEqual({ estoque: 98, movimentacoes: [
+        { tipo: 'venda', quantidade: 2, saldo_antes: 100, saldo_depois: 98, referencia_id: id }] })
+    })
   })
 
   test('Venda acima do estoque é recusada', async ({ page, pdv, api }) => {
@@ -113,6 +146,10 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
     })
     await test.step('Então a venda deve ser recusada com "Estoque insuficiente para \'Mussarela\'"', () =>
       expect(page.getByText("Estoque insuficiente para 'Mussarela'")).toBeVisible())
+    await test.step('E nada é gravado: sem venda e estoque continua 0,200 kg', () => {
+      expect(consultarBanco('select count(*) as n from vendas')).toEqual([{ n: 0 }])
+      expect(estoqueGravado('Mussarela').estoque).toBe(0.2)
+    })
   })
 
   test('Produto "Diverso" (código 999) vende sem estoque', async ({ page, pdv }) => {
@@ -125,6 +162,8 @@ test.describe('Pagamento e finalização @pdv @pagamento', () => {
       await expect(pdv.total).toHaveText(reBrl(7))
     })
     await test.step('E finalizo a venda', () => pdv.pagar('Dinheiro'))
+    await test.step('E no banco o item é o Diverso (código 999) a R$ 7,00', () =>
+      expect(vendaGravada(ultimaVendaId()).itens).toEqual([{ produto: 'Diverso', quantidade: 1, preco_unit: 7, custo_unit: 0, total_item: 7 }]))
     await test.step('Então a venda deve ser concluída com total R$ 7,00', async () => {
       await page.goto('/dashboard')
       await expect(kpi(page, 'faturamento_liquido')).toHaveText(reBrl(7))

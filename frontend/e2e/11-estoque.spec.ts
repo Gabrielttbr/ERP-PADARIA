@@ -1,4 +1,4 @@
-import { test, expect, reBrl, digitarValor, TelaEstoque, TelaRelatorios, Dashboard } from './support'
+import { test, expect, reBrl, digitarValor, TelaEstoque, TelaRelatorios, Dashboard, consultarBanco, estoqueGravado } from './support'
 
 /** cenarios_testes.md — 9. Estoque · Funcionalidade: Cadastro de categorias */
 test.describe('Cadastro de categorias @estoque @categoria', () => {
@@ -39,11 +39,16 @@ test.describe('Cadastro de categorias @estoque @categoria', () => {
   })
 
   test('Não permite categoria duplicada no mesmo nível', async ({ page }) => {
+    test.fail(true, 'P16 — a API não valida nome duplicado: no SQLite (instalação Windows, usado no E2E) a 2ª "Pães" é criada; no PostgreSQL só o índice barra, com erro 500')
     const estoque = new TelaEstoque(page)
+    let status = 0
     await test.step('Dado que existe a categoria "Pães"', () => expect(estoque.categoria('Pães')).toBeVisible())
-    await test.step('Quando tento criar outra categoria "Pães" no mesmo nível', () => estoque.criarCategoria('Pães'))
-    await test.step('Então devo ver uma mensagem de erro', () => expect(page.getByText('Categoria criada!')).toHaveCount(0))
-    await test.step('E deve continuar existindo só uma "Pães"', () => expect(estoque.categoria('Pães')).toHaveCount(1))
+    await test.step('Quando tento criar outra categoria "Pães" no mesmo nível', async () => { status = await estoque.criarCategoria('Pães') })
+    await test.step('Então a API deve recusar com uma mensagem de erro', () => expect(status).toBe(400))
+    await test.step('E deve continuar existindo só uma "Pães" (tela e banco)', async () => {
+      await expect(estoque.categoria('Pães')).toHaveCount(1)
+      expect(consultarBanco("select count(*) as n from categorias where nome = 'Pães' and ativo = 1")).toEqual([{ n: 1 }])
+    })
   })
 
   test('Renomear categoria reflete nos produtos e no relatório', async ({ page, seed }) => {
@@ -82,6 +87,25 @@ test.describe('Cadastro de categorias @estoque @categoria', () => {
       await estoque.categoria('Teste').getByRole('button', { name: 'Confirmar' }).click()
     })
     await test.step('Então ela não deve mais aparecer na lista', () => expect(estoque.categoria('Teste')).toHaveCount(0))
+    await test.step('E no banco fica inativa (exclusão lógica)', () =>
+      expect(consultarBanco("select ativo from categorias where nome = 'Teste'")).toEqual([{ ativo: 0 }]))
+  })
+
+  test('Recriar uma categoria excluída com o mesmo nome', async ({ page }) => {
+    test.info().annotations.push({ type: 'P16', description: 'Passa no SQLite (E2E). No PostgreSQL (Docker) falha: a categoria excluída continua no banco (ativo=0) e o índice único (nome, pai) recusa o mesmo nome com erro 500.' })
+    const estoque = new TelaEstoque(page)
+    await test.step('Dado que criei e excluí a categoria "Teste"', async () => {
+      await estoque.criarCategoria('Teste')
+      await expect(estoque.categoria('Teste')).toBeVisible()
+      await estoque.categoria('Teste').getByRole('button', { name: 'Remover' }).click()
+      await estoque.categoria('Teste').getByRole('button', { name: 'Confirmar' }).click()
+      await expect(estoque.categoria('Teste')).toHaveCount(0)
+    })
+    await test.step('Quando crio "Teste" de novo', () => estoque.criarCategoria('Teste'))
+    await test.step('Então ela deve ser criada e aparecer na lista', async () => {
+      await expect(page.getByText('Categoria criada!').last()).toBeVisible({ timeout: 3000 })
+      await expect(estoque.categoria('Teste')).toBeVisible({ timeout: 3000 })
+    })
   })
 })
 
@@ -103,6 +127,11 @@ test.describe('Cadastro de produto @estoque @produto', () => {
       await expect(linha).toContainText(reBrl(6))
       await expect(linha).toContainText('200.0%')
     })
+    await test.step('E no banco o produto é gravado com os preços, a unidade, a categoria e o estoque', () =>
+      expect(consultarBanco(
+        `select p.preco_custo, p.preco_venda, p.unidade_medida, p.estoque_atual, p.ativo, c.nome as categoria
+           from produtos p join categorias c on c.id = p.categoria_id where p.nome = 'Sonho'`))
+        .toEqual([{ preco_custo: 2, preco_venda: 6, unidade_medida: 'un', estoque_atual: 20, ativo: 1, categoria: 'Pães' }]))
   })
 
   test('Margem estimada aparece no formulário ao digitar os preços', async ({ page }) => {
@@ -191,6 +220,11 @@ test.describe('Movimentação de estoque @estoque @movimentacao', () => {
       await test.step('Dado que o "Café Expresso" tem 100 un em estoque', () => expect(estoque.linha('Café Expresso')).toContainText('100 un'))
       await test.step(`Quando registro uma movimentação "${ex.tipo}" de ${ex.qtd}`, () => estoque.ajustar('Café Expresso', ex.tipo, ex.qtd))
       await test.step(`Então o estoque deve ser ${ex.saldo}`, () => expect(estoque.linha('Café Expresso')).toContainText(`${ex.saldo} un`))
+      await test.step(`E no banco: estoque ${ex.saldo} e movimentação "${ex.tipo}" de 100 para ${ex.saldo}`, () => {
+        const { estoque: saldo, movimentacoes } = estoqueGravado('Café Expresso')
+        expect(saldo).toBe(Number(ex.saldo))
+        expect(movimentacoes).toEqual([{ tipo: ex.tipo, quantidade: Math.abs(Number(ex.saldo) - 100), saldo_antes: 100, saldo_depois: Number(ex.saldo), referencia_id: null }])
+      })
     })
   }
 

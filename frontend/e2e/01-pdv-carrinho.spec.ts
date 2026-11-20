@@ -1,4 +1,4 @@
-import { test, expect, reBrl } from './support'
+import { test, expect, reBrl, vendaGravada, ultimaVendaId } from './support'
 
 /**
  * cenarios_testes.md — 1. PDV · Funcionalidade: Carrinho do PDV
@@ -120,6 +120,12 @@ test.describe('Carrinho do PDV @pdv', () => {
     await test.step('Então o total gravado na venda deve ser R$ 5,33 (Fat. Líquido do dia)', async () => {
       await page.goto('/dashboard')
       await expect(page.getByTestId('kpi-faturamento_liquido').getByTestId('kpi-valor')).toHaveText(reBrl(5.33))
+    })
+    await test.step('E no banco: item 0,333 kg a R$ 16,00 = R$ 5,33, pagamento R$ 5,33', () => {
+      const { venda, itens, pagamentos } = vendaGravada(ultimaVendaId())
+      expect(venda).toMatchObject({ status: 'concluida', subtotal: 5.33, total: 5.33, troco: 0 })
+      expect(itens).toEqual([{ produto: 'Pão Francês', quantidade: 0.333, preco_unit: 16, custo_unit: 6, total_item: 5.33 }])
+      expect(pagamentos).toEqual([{ forma: 'dinheiro', valor: 5.33, nsu: null }])
     })
   })
 })

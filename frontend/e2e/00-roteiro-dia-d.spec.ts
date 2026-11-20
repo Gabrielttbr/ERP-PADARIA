@@ -1,4 +1,4 @@
-import { test, expect, reBrl, digitarValor, Dashboard, TelaCaixa, TelaRelatorios } from './support'
+import { test, expect, reBrl, digitarValor, Dashboard, TelaCaixa, TelaRelatorios, consultarBanco, sessaoGravada, estoqueGravado } from './support'
 
 /**
  * Fluxo dourado: executa o roteiro do dia D (seção 0 do cenarios_testes.md) inteiro pela tela
@@ -99,5 +99,29 @@ test('Roteiro do dia D pelo PDV bate com o gabarito @roteiro @pdv @caixa @dashbo
     const resumo = await caixa.fechar(138)
     expect(Number(resumo.sessao.diferenca)).toBe(0)
     await expect(page.getByText(/Caixa fechado\. Diferença: R\$\s*0,00/)).toBeVisible()
+  })
+
+  await test.step('Banco: vendas, pagamentos, sessão e estoque batem com o gabarito', () => {
+    expect(consultarBanco('select subtotal, desconto_valor, total, troco, status from vendas order by id')).toEqual([
+      { subtotal: 18, desconto_valor: 0, total: 18, troco: 2, status: 'concluida' },
+      { subtotal: 36.5, desconto_valor: 6.5, total: 30, troco: 0, status: 'concluida' },
+      { subtotal: 25, desconto_valor: 2.5, total: 22.5, troco: 0, status: 'concluida' },
+      { subtotal: 20, desconto_valor: 0, total: 20, troco: 0, status: 'cancelada' },
+    ])
+    expect(consultarBanco('select venda_id, forma, valor, nsu from pagamentos order by id')).toEqual([
+      { venda_id: 1, forma: 'dinheiro', valor: 18, nsu: null },
+      { venda_id: 2, forma: 'pix', valor: 30, nsu: null },
+      { venda_id: 3, forma: 'cartao_debito', valor: 22.5, nsu: '1' },
+      { venda_id: 4, forma: 'dinheiro', valor: 20, nsu: null },
+    ])
+    expect(consultarBanco(
+      `select round(sum(i.custo_unit * i.quantidade), 2) as custo from itens_venda i
+         join vendas v on v.id = i.venda_id where v.status = 'concluida'`)).toEqual([{ custo: 32 }])
+    expect(sessaoGravada()).toEqual({ status: 'fechado', valor_abertura: 100, valor_fechamento: 138, total_vendas: 70.5,
+      total_sangrias: 30, total_suprimentos: 50, diferenca: 0 })
+    expect(estoqueGravado('Pão Francês').estoque).toBe(18.25)
+    expect(estoqueGravado('Café Expresso').estoque).toBe(97)
+    expect(estoqueGravado('Fatia de Bolo').estoque).toBe(27)
+    expect(estoqueGravado('Mussarela').estoque).toBe(9.75)
   })
 })
