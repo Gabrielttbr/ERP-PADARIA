@@ -9,7 +9,7 @@ $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $INSTALL_DIR = "C:\Padaria"
-$REPO_URL    = "https://github.com/AlexandreAlan/ERP-PADARIA.git"
+$REPO_URL    = "https://github.com/Gabrielttbr/ERP-PADARIA.git"
 $TMP         = $env:TEMP
 
 # URLs de download direto (caso winget nao esteja disponivel)
@@ -288,7 +288,10 @@ Write-OK "Dependencias Python instaladas"
 # ============================================================================
 Write-Step "Criando banco de dados..."
 Set-Location $backendDir
-cmd.exe /c "$venvPython seed_dev.py"
+# init_db.py: banco LIMPO e idempotente (admin, empresa, caixa e produto Diverso 999).
+# Nao usar seed_dev.py aqui: ele apaga o banco e cadastra dados ficticios.
+cmd.exe /c "$venvPython init_db.py"
+if ($LASTEXITCODE -ne 0) { Write-Host "  [ERRO] Falha ao inicializar o banco de dados." -ForegroundColor Red; exit 1 }
 Set-Location $INSTALL_DIR
 Write-OK "Banco de dados pronto"
 
@@ -372,10 +375,9 @@ Write-Host ""
 Write-Host "  Instalado em : $INSTALL_DIR"                               -ForegroundColor White
 Write-Host "  Atalho       : Area de trabalho > Padaria ERP"             -ForegroundColor White
 Write-Host ""
-Write-Host "  Logins padrao:"                                             -ForegroundColor White
+Write-Host "  Login inicial:"                                             -ForegroundColor White
 Write-Host "    Admin   : admin@padaria.com   / Admin@1234"              -ForegroundColor Gray
-Write-Host "    Caixa   : caixa@padaria.com   / Caixa@1234"              -ForegroundColor Gray
-Write-Host "    Estoque : estoque@padaria.com / Estoque@1234"            -ForegroundColor Gray
+Write-Host "    (troque a senha no primeiro acesso e cadastre os demais usuarios)" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  Para iniciar clique em 'Padaria ERP' na area de trabalho"  -ForegroundColor Cyan
 Write-Host ""
