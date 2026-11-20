@@ -394,7 +394,7 @@ export default function PDVPage() {
               <div className="p-4 space-y-2 shrink-0 safe-area-bottom" style={{ borderTop: `1px solid ${COR.border}`, background: COR.bg }}>
                 <div className="flex justify-between text-xs" style={{ color: COR.muted }}>
                   <span>Subtotal</span>
-                  <span className="font-mono">{formatBRL(subtotal)}</span>
+                  <span data-testid="cart-subtotal" className="font-mono">{formatBRL(subtotal)}</span>
                 </div>
 
                 {showDesconto ? (
@@ -405,6 +405,7 @@ export default function PDVPage() {
                       autoFocus
                       className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
                       style={{ background: COR.surface2, border: `1px solid ${COR.border}`, color: COR.text }}
+                      data-testid="desconto-valor"
                       value={descontoInput.display}
                       onChange={() => {}}
                       onKeyDown={e => { descontoInput.onKeyDown(e); if (e.key === 'Enter') aplicarDesconto(); if (e.key === 'Escape') setShowDesconto(false) }}
@@ -414,13 +415,13 @@ export default function PDVPage() {
                 ) : store.desconto > 0 ? (
                   <div className="flex justify-between text-xs" style={{ color: COR.vermelho }}>
                     <span>Desconto (F9 pra alterar)</span>
-                    <span className="font-mono">−{formatBRL(store.desconto)}</span>
+                    <span data-testid="cart-desconto" className="font-mono">−{formatBRL(store.desconto)}</span>
                   </div>
                 ) : null}
 
                 <div className="flex justify-between items-center pt-1">
                   <span className="font-bold uppercase text-xs tracking-wide" style={{ color: COR.text }}>Total</span>
-                  <span className="text-2xl font-mono font-black" style={{ color: COR.verde }}>{formatBRL(total)}</span>
+                  <span data-testid="cart-total" className="text-2xl font-mono font-black" style={{ color: COR.verde }}>{formatBRL(total)}</span>
                 </div>
                 <button
                   disabled={store.cart.length === 0}

@@ -116,6 +116,7 @@ export default function PesoModal({ aberto, produto, onConfirmar, onCancelar }: 
             ref={inputRef}
             type={isMasked ? 'text' : 'number'}
             inputMode="numeric"
+            data-testid="peso-valor"
             value={displayValue}
             onChange={handleChange}
             onKeyDown={handleKeyDown}

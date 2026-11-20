@@ -28,7 +28,7 @@ const IconFechar = () => (
   </svg>
 )
 
-function KpiCard({ label, value, accent }: { label: string; value: string; accent?: 'green' | 'red' | 'blue' | 'default' }) {
+function KpiCard({ label, value, accent, testId }: { label: string; value: string; accent?: 'green' | 'red' | 'blue' | 'default'; testId?: string }) {
   const colors = {
     green:   { bg: 'var(--clr-green-pale)', color: 'var(--clr-green)',  border: 'var(--clr-border-2)' },
     red:     { bg: 'var(--clr-danger-bg)',  color: 'var(--clr-danger)', border: '#FCA5A5' },
@@ -38,6 +38,7 @@ function KpiCard({ label, value, accent }: { label: string; value: string; accen
   const c = colors[accent ?? 'default']
   return (
     <div
+      data-testid={testId}
       className="rounded-xl p-4 space-y-1"
       style={{ background: c.bg, border: `1px solid ${c.border}` }}
     >
@@ -55,14 +56,14 @@ function ResumoGaveta({ sessao, esperado }: { sessao: any; esperado: number }) {
     </div>
   )
   return (
-    <div className="rounded-xl p-4 space-y-2" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+    <div data-testid="resumo-gaveta" className="rounded-xl p-4 space-y-2" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
       {linha('Fundo inicial', formatBRL(sessao.valor_abertura))}
       {linha('+ Vendas em dinheiro', formatBRL(sessao.total_dinheiro))}
       {linha('− Sangrias', formatBRL(sessao.total_sangrias), 'var(--clr-danger)')}
       {linha('+ Suprimentos', formatBRL(sessao.total_suprimentos))}
       <div className="flex justify-between pt-2" style={{ borderTop: '1px solid #BFDBFE' }}>
         <span className="font-semibold text-sm" style={{ color: '#1D4ED8' }}>Esperado na gaveta</span>
-        <span className="font-mono font-bold text-lg" style={{ color: '#1D4ED8' }}>{formatBRL(esperado)}</span>
+        <span data-testid="gaveta-esperado" className="font-mono font-bold text-lg" style={{ color: '#1D4ED8' }}>{formatBRL(esperado)}</span>
       </div>
       <p className="text-xs" style={{ color: 'var(--clr-text-muted)' }}>
         Considera só o dinheiro (PIX e cartão não passam pela gaveta). O valor só bate se todas as
@@ -209,10 +210,10 @@ export default function CaixaPage() {
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--clr-text-muted)' }}>O que entrou</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <KpiCard label="Dinheiro" value={formatBRL(sessao.total_dinheiro)} />
-              <KpiCard label="PIX"      value={formatBRL(sessao.total_pix)} />
-              <KpiCard label="Cartão"   value={formatBRL(totalCartao)} />
-              <KpiCard label="Total vendido" value={formatBRL(sessao.total_vendas)} accent="green" />
+              <KpiCard label="Dinheiro" value={formatBRL(sessao.total_dinheiro)} testId="caixa-dinheiro" />
+              <KpiCard label="PIX"      value={formatBRL(sessao.total_pix)} testId="caixa-pix" />
+              <KpiCard label="Cartão"   value={formatBRL(totalCartao)} testId="caixa-cartao" />
+              <KpiCard label="Total vendido" value={formatBRL(sessao.total_vendas)} accent="green" testId="caixa-total" />
             </div>
             <p className="text-xs" style={{ color: 'var(--clr-text-muted)' }}>
               Cartão: crédito {formatBRL(sessao.total_cartao_credito)} · débito {formatBRL(sessao.total_cartao_debito)}
@@ -258,6 +259,7 @@ export default function CaixaPage() {
               <label className="label">Valor (R$)</label>
               <input
                 type="text" inputMode="numeric"
+                data-testid="sangria-valor"
                 value={valorSangria.display}
                 onKeyDown={valorSangria.onKeyDown}
                 onChange={() => {}}
@@ -297,6 +299,7 @@ export default function CaixaPage() {
               <label className="label">Valor (R$)</label>
               <input
                 type="text" inputMode="numeric"
+                data-testid="suprimento-valor"
                 value={valorSup.display}
                 onKeyDown={valorSup.onKeyDown}
                 onChange={() => {}}
@@ -347,6 +350,7 @@ export default function CaixaPage() {
               <label className="label">Valor em espécie no caixa (R$)</label>
               <input
                 type="text" inputMode="numeric"
+                data-testid="fechamento-valor"
                 value={valorFechamento.display}
                 onKeyDown={valorFechamento.onKeyDown}
                 onChange={() => {}}

@@ -76,6 +76,8 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
 
   return (
     <div
+      data-testid="cart-item"
+      data-nome={item.nome}
       onClick={onSelecionar}
       className="flex items-center gap-3 p-2.5 rounded-xl cursor-pointer transition-colors"
       style={{ background: selecionado ? '#232326' : '#1a1a1c', border: `1px solid ${selecionado ? '#22c55e' : 'rgba(255,255,255,0.06)'}` }}
@@ -91,6 +93,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
 
       <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
         <button
+          data-testid="cart-menos"
           onClick={() => onUpdateQtd(Math.max(0, parseFloat((item.quantidade - step).toFixed(3))))}
           className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
           style={{ background: '#2a2a2d', color: '#d1d5db' }}
@@ -103,6 +106,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
             <input
               type="text"
               inputMode="decimal"
+              data-testid="cart-item-qtd"
               value={displayQtd}
               onFocus={() => setEditVal(item.quantidade.toFixed(3).replace('.', ','))}
               onChange={e => setEditVal(e.target.value)}
@@ -124,6 +128,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
             type="number"
             step={step}
             min="0"
+            data-testid="cart-item-qtd"
             value={item.quantidade}
             onChange={e => onUpdateQtd(parseFloat(e.target.value) || 0)}
             className="w-9 text-center bg-transparent font-mono font-semibold text-sm outline-none"
@@ -132,6 +137,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
         )}
 
         <button
+          data-testid="cart-mais"
           onClick={() => onUpdateQtd(parseFloat((item.quantidade + step).toFixed(3)))}
           className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-sm"
           style={{ background: '#22c55e', color: '#0a0a0a' }}
@@ -141,7 +147,7 @@ function CartRow({ item, selecionado, onSelecionar, onUpdateQtd, onRemove }: {
       </div>
 
       <div className="flex flex-col items-end gap-1 shrink-0 w-20">
-        <span className="font-mono font-bold text-sm" style={{ color: '#f5f5f5' }}>{formatBRL(item.total_item)}</span>
+        <span data-testid="cart-item-total" className="font-mono font-bold text-sm" style={{ color: '#f5f5f5' }}>{formatBRL(item.total_item)}</span>
         <button onClick={onRemove} title="Remover (Del)" style={{ color: '#6b6b6e' }}>
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 18L18 6M6 6l12 12" />

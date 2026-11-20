@@ -104,6 +104,7 @@ export default function SessaoGuard({ children }: Props) {
               <input
                 type="text"
                 inputMode="numeric"
+                data-testid="abertura-valor"
                 value={valorAbertura.display}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {

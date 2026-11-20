@@ -38,11 +38,11 @@ function TrendBadge({ trend }: { trend: number }) {
 // ── KPI Card ───────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, info, rawValue, fmt, accentColor, icon, delay = 0, trend, featured = false
+  label, info, rawValue, fmt, accentColor, icon, delay = 0, trend, featured = false, testId
 }: {
   label: string; info: string; rawValue: number; fmt: 'brl' | 'pct' | 'num'
   accentColor: string; icon: React.ReactNode; delay?: number
-  trend?: number; featured?: boolean
+  trend?: number; featured?: boolean; testId?: string
 }) {
   const [visible, setVisible] = useState(false)
   const animated = useAnimatedCounter(visible ? rawValue : 0, 900)
@@ -58,6 +58,7 @@ function KpiCard({
 
   return (
     <div
+      data-testid={testId}
       className="bg-white rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden"
       style={{
         border: '1px solid var(--clr-border)',
@@ -97,7 +98,7 @@ function KpiCard({
             text={trend !== undefined ? <>{info}<br /><br />{TREND_INFO}</> : info}
           />
         </div>
-        <p className={`font-mono font-black truncate ${featured ? 'text-2xl' : 'text-xl'}`}
+        <p data-testid="kpi-valor" className={`font-mono font-black truncate ${featured ? 'text-2xl' : 'text-xl'}`}
           style={{ color: 'var(--clr-text)' }}
         >
           {display}
@@ -404,6 +405,7 @@ export default function DashboardPage() {
             isLoading ? <SkeletonCard key={cfg.key} /> : (
               <KpiCard
                 key={cfg.key}
+                testId={`kpi-${cfg.key}`}
                 label={cfg.label}
                 info={cfg.info}
                 rawValue={kpis ? parseFloat(kpis[cfg.key]) || 0 : 0}
@@ -429,6 +431,7 @@ export default function DashboardPage() {
             isLoading ? <SkeletonCard key={cfg.key} /> : (
               <KpiCard
                 key={cfg.key}
+                testId={`kpi-${cfg.key}`}
                 label={cfg.label}
                 info={cfg.info}
                 rawValue={kpis ? parseFloat(kpis[cfg.key]) || 0 : 0}

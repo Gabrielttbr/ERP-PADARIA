@@ -189,6 +189,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
             <input
               type="text"
               inputMode="numeric"
+              data-testid="pagamento-valor"
               value={valorAtual.display}
               onKeyDown={e => {
                 valorAtual.onKeyDown(e)
@@ -209,7 +210,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
           {troco > 0 && (
             <div className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)' }}>
               <span className="text-sm font-semibold" style={{ color: '#22c55e' }}>Troco a devolver</span>
-              <span className="font-mono font-bold text-lg" style={{ color: '#22c55e' }}>{formatBRL(troco)}</span>
+              <span data-testid="pagamento-troco" className="font-mono font-bold text-lg" style={{ color: '#22c55e' }}>{formatBRL(troco)}</span>
             </div>
           )}
 

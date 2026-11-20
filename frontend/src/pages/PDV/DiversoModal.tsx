@@ -72,6 +72,7 @@ export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props)
               ref={precoRef}
               type="text"
               inputMode="numeric"
+              data-testid="diverso-preco"
               value={formatarMascara(precoCentavos)}
               onKeyDown={handlePrecoKeyDown}
               onChange={() => {}}
@@ -88,6 +89,7 @@ export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props)
               type="number"
               step="0.001"
               min="0"
+              data-testid="diverso-qtd"
               value={quantidade}
               onChange={(e) => setQuantidade(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmar() }}
