@@ -108,8 +108,17 @@ export class Pdv {
     await this.page.getByRole('button', { name: 'Confirmar', exact: true }).click()
   }
 
+  /** Confirma a venda. Com esperarSucesso, exige 201 da API para ESTA venda (o toast pode ser da anterior). */
   async confirmar(esperarSucesso = true) {
+    const resposta = esperarSucesso
+      ? this.page.waitForResponse(r => r.url().endsWith('/api/vendas') && r.request().method() === 'POST')
+      : null
     await this.page.getByRole('button', { name: 'Confirmar Venda' }).click()
-    if (esperarSucesso) await expect(this.page.getByText('Venda concluída!')).toBeVisible()
+    if (resposta) {
+      const r = await resposta
+      expect(r.status(), `venda recusada: ${await r.text()}`).toBe(201)
+      await expect(this.page.getByText('Venda concluída!').last()).toBeVisible()
+      await expect(this.page.getByText('Total a pagar')).toBeHidden()
+    }
   }
 }

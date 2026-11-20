@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
-import { BACKEND_DIR, E2E_ENV } from './e2e/support/env'
+import { E2E_ENV, TMP_BACKEND, UVICORN } from './e2e/support/env'
 
 /**
  * Testes E2E do ERP Padaria — cenários do cenarios_testes.md validados pelo frontend.
@@ -28,8 +28,9 @@ export default defineConfig({
   webServer: [
     {
       // TZ=UTC de propósito: o horário gravado tem que ser o de São Paulo mesmo com servidor em UTC.
-      command: 'venv/bin/uvicorn app.main:app --port 8001',
-      cwd: BACKEND_DIR,
+      // cwd fora do backend/: não lê o .env de desenvolvimento (código via PYTHONPATH).
+      command: `${UVICORN} app.main:app --port 8001`,
+      cwd: TMP_BACKEND,
       env: { ...E2E_ENV, TZ: 'UTC' },
       url: 'http://localhost:8001/api/health',
       reuseExistingServer: false,

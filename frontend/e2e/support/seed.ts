@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { BACKEND_DIR, E2E_ENV } from './env'
+import { E2E_ENV, PYTHON, TMP_BACKEND } from './env'
 
 export type PerfilSeed = 'base' | 'dia-d' | 'noite' | 'dia-d-e-ontem'
 
@@ -10,8 +10,8 @@ export type PerfilSeed = 'base' | 'dia-d' | 'noite' | 'dia-d-e-ontem'
  * noite → base + venda de R$ 10,00 ontem às 22:30
  */
 export function seed(perfil: PerfilSeed = 'base'): void {
-  execFileSync('venv/bin/python', ['-m', 'tests.e2e_seed', perfil], {
-    cwd: BACKEND_DIR,
+  execFileSync(PYTHON, ['-m', 'tests.e2e_seed', perfil], {
+    cwd: TMP_BACKEND,
     env: { ...process.env, ...E2E_ENV },
     stdio: 'pipe',
   })
