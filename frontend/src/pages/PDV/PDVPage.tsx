@@ -469,15 +469,21 @@ export default function PDVPage() {
           onCancel={() => setShowPaymentModal(false)}
           onConfirm={(pagamentos) => {
             if (!store.sessaoId) { toast.error('Nenhuma sessão de caixa aberta'); return }
+            // Itens diversos usam ID temporário (900000+) no carrinho; na venda vão com o ID real do produto 999
+            const temDiverso = store.cart.some((item) => item.produto_id >= 900000)
+            const diversoId = todosProdutos.find((p: any) => p.codigo_barras === '999')?.id
+            if (temDiverso && !diversoId) {
+              toast.error('Produto Diverso (código 999) não cadastrado ou inativo')
+              return
+            }
             createVendaMutation.mutate(
               {
                 sessao_id: store.sessaoId,
                 cliente_id: store.clienteId,
                 itens: store.cart.map((item) => {
-                  // Se for item diverso (produto_id >= 900000), envia ID real (17) com preco_unit customizado
                   const isDiverso = item.produto_id >= 900000
                   return {
-                    produto_id: isDiverso ? 17 : item.produto_id, // ID real do DIVERSO é 17
+                    produto_id: isDiverso ? diversoId : item.produto_id,
                     quantidade: item.quantidade,
                     desconto_unit: item.desconto_unit,
                     ...(isDiverso && { preco_unit: item.preco_unit })

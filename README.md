@@ -277,7 +277,9 @@ venv\Scripts\python.exe seed_dev.py
 
 ## 4. Credenciais Padrão
 
-Criadas automaticamente pelo `seed_dev.py`:
+O instalador do Windows (`INSTALAR_SISTEMA.bat`) e o `instalar.sh` usam o `init_db.py`: banco limpo, só com o **Admin** abaixo, a empresa, o Caixa 01 e o produto **DIVERSO (código 999)**.
+
+Com dados de exemplo (`seed_dev.py`, uso dev/demo), são criados os três:
 
 | Perfil      | E-mail                  | Senha          |
 |-------------|-------------------------|----------------|

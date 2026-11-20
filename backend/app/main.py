@@ -6,8 +6,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 from app.config import get_settings
-from app.database import engine
+from app.database import engine, AsyncSessionLocal
 from app.migrations import aplicar_migracoes_aditivas, garantir_tabelas_novas
+from app.services.produto_diverso import garantir_produto_diverso
 from app.routers import (
     auth,
     usuarios,
@@ -42,6 +43,11 @@ _SERVE_FRONTEND = os.path.isdir(_FRONTEND_DIST)
 async def lifespan(app: FastAPI):
     await garantir_tabelas_novas(engine)
     await aplicar_migracoes_aditivas(engine)
+    # O PDV depende do produto Diverso (999): garante em toda instalação/atualização
+    async with AsyncSessionLocal() as db:
+        _, alterado = await garantir_produto_diverso(db)
+        if alterado:
+            await db.commit()
     yield
 
 

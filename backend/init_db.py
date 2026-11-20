@@ -5,7 +5,8 @@ Diferente do seed_dev.py, este script:
   - NÃO apaga dados (sem drop_all);
   - NÃO cria produtos/fornecedores fictícios;
   - cria apenas o mínimo para operar: tabelas, 1 usuário admin,
-    a configuração da empresa (branding) e 1 caixa padrão.
+    a configuração da empresa (branding), 1 caixa padrão e o produto
+    Diverso (código 999).
 
 É idempotente: rodar de novo não duplica nada.
 
@@ -21,8 +22,6 @@ import asyncio
 import os
 import uuid
 from datetime import datetime
-from decimal import Decimal
-
 from sqlalchemy import select
 
 from app.database import engine, Base, AsyncSessionLocal
@@ -30,7 +29,7 @@ from app.models import *  # noqa: F401,F403,F405 — registra metadados de todos
 from app.models.usuario import Usuario  # noqa: F811
 from app.models.caixa import Caixa  # noqa: F811
 from app.models.configuracao import ConfiguracaoEmpresa  # noqa: F811
-from app.models.produto import Produto, Categoria  # noqa: F811
+from app.services.produto_diverso import garantir_produto_diverso
 from app.utils.security import hash_password
 from app.config import get_settings
 
@@ -89,35 +88,8 @@ async def main() -> None:
             print("OK caixa padrão criado")
 
         # 4. Produto Diverso (código 999) para itens não cadastrados
-        existe_diverso = (await db.execute(
-            select(Produto).where(Produto.codigo_barras == "999")
-        )).scalar_one_or_none()
-        if existe_diverso:
-            print("-- produto DIVERSO já existe")
-        else:
-            # Busca categoria "Outros" ou cria se não existir
-            cat_outros = (await db.execute(
-                select(Categoria).where(Categoria.nome == "Outros")
-            )).scalar_one_or_none()
-            if not cat_outros:
-                cat_outros = Categoria(
-                    nome="Outros", descricao="Demais produtos",
-                    ativo=True, created_at=now, updated_at=now
-                )
-                db.add(cat_outros)
-                await db.flush()
-
-            db.add(Produto(
-                codigo_barras="999", sku=None, nome="DIVERSO",
-                categoria_id=cat_outros.id, fornecedor_id=None,
-                unidade_medida="un",
-                preco_custo=Decimal("0.00"),
-                preco_venda=Decimal("0.00"),
-                estoque_atual=Decimal("999999.000"),
-                estoque_minimo=Decimal("0.000"),
-                ativo=True, created_at=now, updated_at=now,
-            ))
-            print("OK produto DIVERSO (999) criado")
+        _, criado = await garantir_produto_diverso(db)
+        print("OK produto DIVERSO (999) garantido" if criado else "-- produto DIVERSO já existe")
 
         await db.commit()
 

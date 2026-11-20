@@ -70,7 +70,7 @@ export const usePDVStore = create<PDVState>((set, get) => ({
   addDiversoItem: (preco, quantidade) =>
     set((state) => {
       // Usa ID temporário único (900000+) para não agrupar itens diversos diferentes
-      // O ID real (17) será enviado ao backend com preco_unit customizado
+      // Na venda, o PDV troca pelo ID real do produto 999 e envia o preco_unit customizado
       const timestamp = Date.now()
       const uniqueId = 900000 + (timestamp % 100000)
 

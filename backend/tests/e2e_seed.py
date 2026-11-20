@@ -70,8 +70,6 @@ async def _base(db) -> dict:
         "mussarela": produto("Mussarela", "Frios", "kg", "32.00", "50.00", "10", "1004"),
         "diverso": produto("Diverso", "Outros", "un", "0.00", "0.00", "0", "999"),
     }
-    # O PDV envia o Diverso com produto_id 17 fixo no código (PDVPage.tsx) — ver P10.
-    prods["diverso"].id = 17
     db.add_all(prods.values())
     await db.flush()
     return {"admin": admin, "prods": prods}
