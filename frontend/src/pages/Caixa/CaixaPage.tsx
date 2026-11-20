@@ -96,7 +96,7 @@ export default function CaixaPage() {
       onSuccess: () => {
         toast.success('Sangria registrada')
         setShowSangria(false)
-        setValorSangria('')
+        valorSangria.reset()
         setMotivoSangria('')
         queryClient.invalidateQueries('sessao-ativa')
       },
@@ -206,7 +206,7 @@ export default function CaixaPage() {
             </button>
             <button
               onClick={() => setShowFechar(true)}
-              className="btn-danger gap-2"
+              className="btn-bakery gap-2"
             >
               <IconFechar />
               Fechar Caixa
@@ -256,7 +256,7 @@ export default function CaixaPage() {
 
       {/* Modal Suprimento */}
       {showSuprimento && (
-        <Modal title="Registrar Suprimento" subtitle="Adição de numerário ao caixa" onClose={() => { setShowSuprimento(false); setValorSup(''); setMotivoSup('') }}>
+        <Modal title="Registrar Suprimento" subtitle="Adição de numerário ao caixa" onClose={() => { setShowSuprimento(false); valorSup.reset(); setMotivoSup('') }}>
           <div className="space-y-4">
             <div>
               <label className="label">Valor (R$)</label>
@@ -280,7 +280,7 @@ export default function CaixaPage() {
               />
             </div>
             <div className="flex gap-3 pt-1">
-              <button onClick={() => { setShowSuprimento(false); setValorSup(''); setMotivoSup('') }} className="btn-bakery flex-1">Cancelar</button>
+              <button onClick={() => { setShowSuprimento(false); valorSup.reset(); setMotivoSup('') }} className="btn-bakery flex-1">Cancelar</button>
               <button
                 onClick={() => {
                   if (!valorSup.float || !motivoSup) return
