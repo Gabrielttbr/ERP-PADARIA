@@ -4,7 +4,11 @@ import { ADMIN, API_URL } from './env'
 /** Cliente da API autenticado como admin — só para ações que não têm tela. */
 export class Api {
   private token = ''
-  constructor(private request: APIRequestContext) {}
+  readonly base = API_URL
+  constructor(readonly request: APIRequestContext) {}
+
+  /** Cabeçalho Authorization do admin. */
+  auth() { return this.headers() }
 
   private async headers() {
     if (!this.token) {

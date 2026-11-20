@@ -464,6 +464,7 @@ export default function DashboardPage() {
               maquinetas.map((m: any) => (
                 <div
                   key={m.maquineta}
+                  data-testid="maquineta-card"
                   className="bg-white rounded-2xl p-4 flex flex-col gap-3 relative overflow-hidden"
                   style={{ border: '1px solid var(--clr-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
                 >
@@ -672,6 +673,7 @@ export default function DashboardPage() {
                   return (
                     <tr
                       key={item.produto_id}
+                      data-testid="abc-linha"
                       style={{ borderTop: '1px solid var(--clr-border)', transition: 'background 0.1s' }}
                       onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'var(--clr-green-pale)'}
                       onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}

@@ -100,6 +100,14 @@ export class Pdv {
     await this.page.getByRole('button', { name: /Adicionar pagamento parcial/ }).click()
   }
 
+  /** Item Diverso (código 999) com preço livre. */
+  async adicionarDiverso(valor: number) {
+    await this.busca.fill('Diverso')
+    await this.page.getByRole('button').filter({ hasText: 'Diverso' }).first().click()
+    await digitarValor(this.page.getByTestId('diverso-preco'), valor)
+    await this.page.getByRole('button', { name: 'Confirmar', exact: true }).click()
+  }
+
   async confirmar(esperarSucesso = true) {
     await this.page.getByRole('button', { name: 'Confirmar Venda' }).click()
     if (esperarSucesso) await expect(this.page.getByText('Venda concluída!')).toBeVisible()
