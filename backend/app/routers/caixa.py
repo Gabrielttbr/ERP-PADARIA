@@ -86,6 +86,7 @@ async def _to_sessao_read(sessao: SessaoCaixa, db: AsyncSession) -> SessaoCaixaR
     caixa = caixa_result.scalar_one_or_none()
     user_result = await db.execute(select(Usuario).where(Usuario.id == sessao.usuario_id))
     usuario = user_result.scalar_one_or_none()
+    totais = await caixa_service.totais_por_forma(sessao.id, db)
 
     return SessaoCaixaRead(
         id=sessao.id,
@@ -103,6 +104,12 @@ async def _to_sessao_read(sessao: SessaoCaixa, db: AsyncSession) -> SessaoCaixaR
         observacao=sessao.observacao,
         opened_at=sessao.opened_at,
         closed_at=sessao.closed_at,
+        total_dinheiro=totais["dinheiro"],
+        total_pix=totais["pix"],
+        total_cartao_credito=totais["cartao_credito"],
+        total_cartao_debito=totais["cartao_debito"],
+        total_vale=totais["vale"],
+        dinheiro_esperado=caixa_service.dinheiro_esperado_na_gaveta(sessao, totais),
     )
 
 

@@ -47,6 +47,31 @@ function KpiCard({ label, value, accent }: { label: string; value: string; accen
   )
 }
 
+function ResumoGaveta({ sessao, esperado }: { sessao: any; esperado: number }) {
+  const linha = (label: string, valor: string, cor?: string) => (
+    <div className="flex justify-between text-sm">
+      <span style={{ color: 'var(--clr-text-muted)' }}>{label}</span>
+      <span className="font-mono" style={{ color: cor ?? 'var(--clr-text)' }}>{valor}</span>
+    </div>
+  )
+  return (
+    <div className="rounded-xl p-4 space-y-2" style={{ background: '#EFF6FF', border: '1px solid #BFDBFE' }}>
+      {linha('Fundo inicial', formatBRL(sessao.valor_abertura))}
+      {linha('+ Vendas em dinheiro', formatBRL(sessao.total_dinheiro))}
+      {linha('− Sangrias', formatBRL(sessao.total_sangrias), 'var(--clr-danger)')}
+      {linha('+ Suprimentos', formatBRL(sessao.total_suprimentos))}
+      <div className="flex justify-between pt-2" style={{ borderTop: '1px solid #BFDBFE' }}>
+        <span className="font-semibold text-sm" style={{ color: '#1D4ED8' }}>Esperado na gaveta</span>
+        <span className="font-mono font-bold text-lg" style={{ color: '#1D4ED8' }}>{formatBRL(esperado)}</span>
+      </div>
+      <p className="text-xs" style={{ color: 'var(--clr-text-muted)' }}>
+        Considera só o dinheiro (PIX e cartão não passam pela gaveta). O valor só bate se todas as
+        sangrias (retiradas) e suprimentos (reforços de troco) foram registrados aqui.
+      </p>
+    </div>
+  )
+}
+
 function Modal({ title, subtitle, onClose, children }: { title: string; subtitle?: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(25,40,25,0.55)', backdropFilter: 'blur(3px)' }}>
@@ -128,9 +153,9 @@ export default function CaixaPage() {
     )
   }
 
-  const saldoEsperado = sessao
-    ? parseFloat(sessao.valor_abertura) + parseFloat(sessao.total_vendas) - parseFloat(sessao.total_sangrias) + parseFloat(sessao.total_suprimentos)
-    : 0
+  const n = (v: any) => parseFloat(v ?? 0) || 0
+  const totalCartao = sessao ? n(sessao.total_cartao_credito) + n(sessao.total_cartao_debito) : 0
+  const dinheiroEsperado = sessao ? n(sessao.dinheiro_esperado) : 0
 
   return (
     <div className="p-6 space-y-6" style={{ background: 'var(--clr-bg)', minHeight: '100vh' }}>
@@ -180,13 +205,23 @@ export default function CaixaPage() {
             </div>
           </div>
 
-          {/* KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KpiCard label="Fundo inicial"   value={formatBRL(sessao.valor_abertura)} />
-            <KpiCard label="Total vendas"    value={formatBRL(sessao.total_vendas)}    accent="green" />
-            <KpiCard label="Sangrias"        value={`− ${formatBRL(sessao.total_sangrias)}`} accent="red" />
-            <KpiCard label="Saldo esperado"  value={formatBRL(saldoEsperado)}          accent="blue" />
+          {/* Entradas por forma de pagamento */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--clr-text-muted)' }}>O que entrou</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <KpiCard label="Dinheiro" value={formatBRL(sessao.total_dinheiro)} />
+              <KpiCard label="PIX"      value={formatBRL(sessao.total_pix)} />
+              <KpiCard label="Cartão"   value={formatBRL(totalCartao)} />
+              <KpiCard label="Total vendido" value={formatBRL(sessao.total_vendas)} accent="green" />
+            </div>
+            <p className="text-xs" style={{ color: 'var(--clr-text-muted)' }}>
+              Cartão: crédito {formatBRL(sessao.total_cartao_credito)} · débito {formatBRL(sessao.total_cartao_debito)}
+              {n(sessao.total_vale) > 0 && <> · Vale: {formatBRL(sessao.total_vale)}</>}
+            </p>
           </div>
+
+          {/* Dinheiro esperado na gaveta */}
+          <ResumoGaveta sessao={sessao} esperado={dinheiroEsperado} />
 
           {/* Ações */}
           <div className="flex flex-wrap gap-3">
@@ -305,11 +340,9 @@ export default function CaixaPage() {
 
       {/* Modal Fechar Caixa */}
       {showFechar && (
-        <Modal title="Fechar Caixa" subtitle="Informe o valor físico em caixa" onClose={() => setShowFechar(false)}>
+        <Modal title="Fechar Caixa" subtitle="Conte o dinheiro da gaveta e informe abaixo" onClose={() => setShowFechar(false)}>
           <div className="space-y-4">
-            <p className="text-sm" style={{ color: 'var(--clr-text-muted)' }}>
-              Saldo esperado: <strong style={{ color: 'var(--clr-text)' }}>{formatBRL(saldoEsperado)}</strong>
-            </p>
+            <ResumoGaveta sessao={sessao} esperado={dinheiroEsperado} />
             <div>
               <label className="label">Valor em espécie no caixa (R$)</label>
               <input

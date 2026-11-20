@@ -86,9 +86,40 @@ async def test_fechamento_dinheiro_soma_o_que_ficou_na_gaveta(db):
     await _vender(db, s.id, u.id, p.id, "2", "dinheiro", "20.00")
     await _vender(db, s.id, u.id, p.id, "1", "pix", "9.00")
 
-    resumo = await fechar_caixa(s.id, FechamentoCaixaRequest(valor_fechamento=Decimal("127.00")), u.id, db)
+    resumo = await fechar_caixa(s.id, FechamentoCaixaRequest(valor_fechamento=Decimal("118.00")), u.id, db)
 
+    assert resumo.sessao.diferenca == Decimal("0.00")  # 100 + 18 de dinheiro
     assert resumo.total_dinheiro == Decimal("18.00")
     assert resumo.total_pix == Decimal("9.00")
     # Soma das formas = total vendido na sessão.
     assert resumo.total_dinheiro + resumo.total_pix == resumo.sessao.total_vendas
+
+
+async def test_esperado_na_gaveta_ignora_pix_e_cartao(db):
+    # Dia D do plano de testes: abertura 100, dinheiro 18, PIX 30, débito 22,50,
+    # sangria 30, suprimento 50 → gaveta = 100 + 18 − 30 + 50 = 138.
+    u = await criar_usuario(db)
+    s = await criar_sessao(db, u.id, valor_abertura="100.00")
+    p = await criar_produto(db, preco_venda="1.50", estoque="1000")
+    await _vender(db, s.id, u.id, p.id, "12", "dinheiro", "20.00")       # 18,00 (troco 2)
+    await _vender(db, s.id, u.id, p.id, "20", "pix", "30.00")            # 30,00
+    await _vender(db, s.id, u.id, p.id, "15", "cartao_debito", "22.50")  # 22,50
+    await registrar_sangria(s.id, SangriaRequest(valor=Decimal("30.00"), motivo="banco"), u.id, db)
+    await registrar_suprimento(s.id, SuprimentoRequest(valor=Decimal("50.00"), motivo="troco"), u.id, db)
+
+    resumo = await fechar_caixa(s.id, FechamentoCaixaRequest(valor_fechamento=Decimal("138.00")), u.id, db)
+
+    assert resumo.sessao.total_vendas == Decimal("70.50")
+    assert resumo.sessao.diferenca == Decimal("0.00")
+
+
+async def test_sangria_nao_pode_usar_dinheiro_de_pix(db):
+    # Gaveta tem só os 10 de abertura; os 50 do PIX não estão lá.
+    u = await criar_usuario(db)
+    s = await criar_sessao(db, u.id, valor_abertura="10.00")
+    p = await criar_produto(db, preco_venda="10.00", estoque="100")
+    await _vender(db, s.id, u.id, p.id, "5", "pix", "50.00")
+
+    with pytest.raises(HTTPException) as exc:
+        await registrar_sangria(s.id, SangriaRequest(valor=Decimal("40.00"), motivo="x"), u.id, db)
+    assert exc.value.status_code == 422

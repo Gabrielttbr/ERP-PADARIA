@@ -20,6 +20,7 @@ from app.schemas.caixa import (
 )
 
 TWO = Decimal("0.01")
+FORMAS_PAGAMENTO = ("dinheiro", "pix", "cartao_credito", "cartao_debito", "vale")
 
 def _D(v: Decimal) -> Decimal:
     return v.quantize(TWO, ROUND_HALF_UP)
@@ -84,7 +85,7 @@ async def fechar_caixa(
     totais          = await _totalizar_formas_pagamento(sessao_id, db)
     now             = datetime.utcnow()
     valor_fechamento = _D(payload.valor_fechamento)
-    saldo_esperado  = sessao.valor_abertura + sessao.total_vendas - sessao.total_sangrias + sessao.total_suprimentos
+    saldo_esperado  = dinheiro_esperado_na_gaveta(sessao, totais)
     diferenca       = _D(valor_fechamento - saldo_esperado)
 
     sessao.status           = "fechado"
@@ -168,6 +169,26 @@ async def get_sessao_ativa(usuario_id: int, db: AsyncSession) -> Optional[Sessao
     )).scalar_one_or_none()
 
 
+async def totais_por_forma(sessao_id: int, db: AsyncSession) -> dict[str, Decimal]:
+    """Quanto entrou em cada forma de pagamento na sessão (vendas concluídas)."""
+    totais = await _totalizar_formas_pagamento(sessao_id, db)
+    return {f: totais.get(f, Decimal("0.00")) for f in FORMAS_PAGAMENTO}
+
+
+def dinheiro_esperado_na_gaveta(sessao: SessaoCaixa, totais: dict[str, Decimal]) -> Decimal:
+    """Dinheiro físico que deveria estar na gaveta.
+
+    Só o dinheiro entra: PIX e cartão vão direto pro banco/maquineta. O valor
+    só bate com a contagem se as sangrias e suprimentos foram registrados.
+    """
+    return _D(
+        sessao.valor_abertura
+        + totais.get("dinheiro", Decimal("0.00"))
+        - sessao.total_sangrias
+        + sessao.total_suprimentos
+    )
+
+
 # ── Private helpers ────────────────────────────────────────────────────────────
 
 async def _get_sessao_aberta_por_caixa(caixa_id: int, db: AsyncSession) -> Optional[SessaoCaixa]:
@@ -192,7 +213,7 @@ async def _registrar_movimentacao(
 
     valor_q = _D(valor)
     if tipo == "sangria":
-        saldo = sessao.valor_abertura + sessao.total_vendas - sessao.total_sangrias + sessao.total_suprimentos
+        saldo = dinheiro_esperado_na_gaveta(sessao, await _totalizar_formas_pagamento(sessao_id, db))
         if valor_q > saldo:
             raise HTTPException(status_code=422, detail="Saldo insuficiente para sangria")
         sessao.total_sangrias = _D(sessao.total_sangrias + valor_q)

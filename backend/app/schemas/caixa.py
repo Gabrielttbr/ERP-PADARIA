@@ -55,6 +55,13 @@ class SessaoCaixaRead(BaseModel):
     observacao: Optional[str]
     opened_at: datetime
     closed_at: Optional[datetime]
+    # Resumo por forma de pagamento (preenchido na sessão ativa)
+    total_dinheiro: Decimal = Decimal("0.00")
+    total_pix: Decimal = Decimal("0.00")
+    total_cartao_credito: Decimal = Decimal("0.00")
+    total_cartao_debito: Decimal = Decimal("0.00")
+    total_vale: Decimal = Decimal("0.00")
+    dinheiro_esperado: Decimal = Decimal("0.00")
 
     model_config = {"from_attributes": True}
 
