@@ -6,6 +6,7 @@ import { formatBRL } from '@/utils/currency'
 import { format } from 'date-fns'
 import { usePDVStore } from '@/store/pdvStore'
 import { useCurrencyInput } from '@/hooks/useCurrencyInput'
+import { mensagemErro } from '@/utils/erro'
 
 const IconClose = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +127,7 @@ export default function CaixaPage() {
         setMotivoSangria('')
         queryClient.invalidateQueries('sessao-ativa')
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro')) },
     }
   )
 
@@ -139,7 +140,7 @@ export default function CaixaPage() {
         queryClient.invalidateQueries('sessao-ativa')
         toast.success(`Caixa fechado. Diferença: ${formatBRL(data.sessao.diferenca || 0)}`)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro')) },
     }
   )
 
@@ -329,7 +330,7 @@ export default function CaixaPage() {
                       valorSup.reset(); setMotivoSup('')
                       queryClient.invalidateQueries('sessao-ativa')
                     })
-                    .catch((e: any) => toast.error(e.response?.data?.detail || 'Erro'))
+                    .catch((e: any) => toast.error(mensagemErro(e, 'Erro')))
                 }}
                 disabled={!valorSup.float || !motivoSup}
                 className="btn-action flex-1"

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
+import { mensagemErro } from '@/utils/erro'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,7 @@ function ClienteModal({
         qc.invalidateQueries('clientes')
         onClose()
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao salvar') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao salvar')) },
     }
   )
 

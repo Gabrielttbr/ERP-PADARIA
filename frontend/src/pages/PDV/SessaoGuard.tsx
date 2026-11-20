@@ -5,6 +5,7 @@ import { api } from '@/config/api'
 import { usePDVStore } from '@/store/pdvStore'
 import { formatBRL } from '@/utils/currency'
 import { useCurrencyInput } from '@/hooks/useCurrencyInput'
+import { mensagemErro } from '@/utils/erro'
 
 interface Props { children: React.ReactNode }
 
@@ -40,7 +41,7 @@ export default function SessaoGuard({ children }: Props) {
         toast.success(`Caixa aberto com fundo de ${formatBRL(data.valor_abertura)}`)
       },
       onError: (err: any) => {
-        toast.error(err.response?.data?.detail || 'Erro ao abrir caixa')
+        toast.error(mensagemErro(err, 'Erro ao abrir caixa'))
       },
     }
   )

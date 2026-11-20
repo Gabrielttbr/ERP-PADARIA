@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
+import { mensagemErro } from '@/utils/erro'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,7 +83,7 @@ export default function ImportarXmlModal({ onClose, onSuccess }: { onClose: () =
         setPrevia(data)
         setNotaFiscal(data.numero || '')
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Não consegui ler este XML') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Não consegui ler este XML')) },
     }
   )
 
@@ -118,7 +119,7 @@ export default function ImportarXmlModal({ onClose, onSuccess }: { onClose: () =
         onSuccess()
       },
       onError: (err: any) => {
-        if (err) toast.error(err.response?.data?.detail ?? 'Erro ao confirmar a importação')
+        if (err) toast.error(mensagemErro(err, 'Erro ao confirmar a importação'))
       },
     }
   )

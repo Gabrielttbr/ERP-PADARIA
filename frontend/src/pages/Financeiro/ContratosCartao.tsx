@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
+import { mensagemErro } from '@/utils/erro'
 
 interface Operadora { id: number; nome: string; ativo: boolean }
 interface Taxa {
@@ -29,7 +30,7 @@ function NovaOperadoraForm({ onCriada }: { onCriada: () => void }) {
     () => api.post('/financeiro/operadoras', { nome }),
     {
       onSuccess: () => { toast.success('Operadora cadastrada'); qc.invalidateQueries('operadoras'); setNome(''); onCriada() },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao cadastrar') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao cadastrar')) },
     }
   )
   return (
@@ -63,7 +64,7 @@ function NovaTaxaForm({ operadoraId, onCriada }: { operadoraId: number; onCriada
         setTaxa('')
         onCriada()
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao cadastrar taxa') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao cadastrar taxa')) },
     }
   )
 
@@ -121,7 +122,7 @@ export default function ContratosCartao() {
     (taxaId: number) => api.delete(`/financeiro/taxas/${taxaId}`),
     {
       onSuccess: () => { toast.success('Taxa removida'); qc.invalidateQueries(['taxas', operadoraSelecionada]) },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao remover') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao remover')) },
     }
   )
 

@@ -17,6 +17,7 @@ import PesoModal from './PesoModal'
 import SessaoGuard from './SessaoGuard'
 import { useIsMobile } from '@/Mobile/Android/useIsMobile'
 import { isPeso } from '@/utils/formatQtd'
+import { mensagemErro } from '@/utils/erro'
 
 const COR = {
   bg: '#0a0a0b', surface: '#141416', surface2: '#1a1a1c', surface3: '#222224',
@@ -265,7 +266,7 @@ export default function PDVPage() {
         queryClient.invalidateQueries(['estoque-alertas'])
         toast.success('Venda concluída!')
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail || 'Erro na venda') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro na venda')) },
     }
   )
 
@@ -273,6 +274,11 @@ export default function PDVPage() {
   const total = store.total()
 
   const aplicarDesconto = () => {
+    // Desconto acima do subtotal zera o total e a venda seria recusada pela API (P10).
+    if (descontoInput.float > subtotal + 0.001) {
+      toast.error('Desconto não pode ser maior que o subtotal')
+      return
+    }
     store.setDesconto(descontoInput.float)
     setShowDesconto(false); descontoInput.reset()
   }

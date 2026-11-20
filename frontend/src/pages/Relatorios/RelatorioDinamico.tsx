@@ -3,6 +3,7 @@ import { useQuery } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { fmtQtd } from '@/utils/formatQtd'
+import { mensagemErro } from '@/utils/erro'
 
 const LABEL_DIMENSAO: Record<string, string> = {
   dia: 'Dia', categoria: 'Categoria', produto: 'Produto',
@@ -76,7 +77,7 @@ export default function RelatorioDinamico() {
       const { data } = await api.post('/relatorios/dinamico', payload())
       setLinhas(data.linhas)
     } catch (err: any) {
-      toast.error(err.response?.data?.detail ?? 'Erro ao gerar o relatório')
+      toast.error(mensagemErro(err, 'Erro ao gerar o relatório'))
     } finally {
       setGerando(false)
     }

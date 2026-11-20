@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
+import { mensagemErro } from '@/utils/erro'
 
 interface DetalheLinha {
   linha: number
@@ -49,7 +50,7 @@ export default function ImportarExcelModal({ onClose, onSuccess }: { onClose: ()
     (f: File) => { setArquivo(f); return enviar(false)! },
     {
       onSuccess: ({ data }) => setResumo(data),
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Não consegui ler esta planilha') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Não consegui ler esta planilha')) },
     }
   )
 
@@ -61,7 +62,7 @@ export default function ImportarExcelModal({ onClose, onSuccess }: { onClose: ()
         qc.invalidateQueries('produtos')
         onSuccess()
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao aplicar a importação') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao aplicar a importação')) },
     }
   )
 

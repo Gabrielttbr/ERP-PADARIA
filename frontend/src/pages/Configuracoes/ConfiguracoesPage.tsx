@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { useEmpresaStore, EmpresaConfig } from '@/store/empresaStore'
+import { mensagemErro } from '@/utils/erro'
 
 interface Usuario {
   id: number
@@ -102,7 +103,7 @@ function TabEmpresa() {
         setEmpresa(data); queryClient.setQueryData('empresa', data)
         toast.success('Configurações salvas!')
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao salvar') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao salvar')) },
     }
   )
 
@@ -117,7 +118,7 @@ function TabEmpresa() {
         setEmpresa(data); queryClient.setQueryData('empresa', data)
         toast.success('Logo atualizado!')
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao enviar logo') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao enviar logo')) },
     }
   )
 
@@ -196,7 +197,7 @@ function UsuarioModal({ usuario, onClose, onSaved }: { usuario: Usuario | null; 
         : api.put(`/usuarios/${usuario!.id}`, { nome: data.nome, email: data.email, perfil: data.perfil, ...(data.senha ? { nova_senha: data.senha } : {}) }).then((r) => r.data),
     {
       onSuccess: () => { toast.success(isNew ? 'Usuário criado!' : 'Usuário atualizado!'); onSaved(); onClose() },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao salvar usuário') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao salvar usuário')) },
     }
   )
 
@@ -243,7 +244,7 @@ function ResetSenhaModal({ usuario, onClose }: { usuario: Usuario; onClose: () =
     () => api.put(`/usuarios/${usuario.id}`, { nova_senha: senha }).then((r) => r.data),
     {
       onSuccess: () => { toast.success('Senha redefinida!'); onClose() },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao redefinir senha') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao redefinir senha')) },
     }
   )
 
@@ -290,13 +291,13 @@ function TabUsuarios() {
   const toggleAtivoM = useMutation(
     ({ id, ativo }: { id: number; ativo: boolean }) => api.put(`/usuarios/${id}`, { ativo }).then((r) => r.data),
     { onSuccess: () => { queryClient.invalidateQueries('usuarios'); toast.success('Status atualizado!') },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro') } }
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro')) } }
   )
 
   const deleteM = useMutation(
     (id: number) => api.delete(`/usuarios/${id}`),
     { onSuccess: () => { queryClient.invalidateQueries('usuarios'); setConfirmDelete(null); toast.success('Usuário removido!') },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro') } }
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro')) } }
   )
 
   return (
@@ -426,13 +427,13 @@ function TabSmtp() {
   const salvarM = useMutation(
     (payload: typeof form) => api.put('/configuracoes/smtp', { ...payload, smtp_port: Number(payload.smtp_port) || 587, smtp_senha: payload.smtp_senha || undefined }).then((r) => r.data),
     { onSuccess: () => { queryClient.invalidateQueries('smtp'); toast.success('SMTP salvo!'); setForm(p => ({ ...p, smtp_senha: '' })) },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao salvar') } }
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao salvar')) } }
   )
 
   const testar = async () => {
     setTestando(true)
     try { await api.post('/configuracoes/smtp/testar'); toast.success('Conexão SMTP OK!') }
-    catch (e: any) { toast.error(e.response?.data?.detail || 'Falha na conexão') }
+    catch (e: any) { toast.error(mensagemErro(e, 'Falha na conexão')) }
     finally { setTestando(false) }
   }
 

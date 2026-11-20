@@ -4,6 +4,7 @@ import { useMutation } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { useAuthStore } from '@/store/authStore'
+import { mensagemErro } from '@/utils/erro'
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -26,7 +27,7 @@ export default function LoginPage() {
         navigate(rotaDestino)
       },
       onError: (err: any) => {
-        toast.error(err.response?.data?.detail || 'E-mail ou senha incorretos')
+        toast.error(mensagemErro(err, 'E-mail ou senha incorretos'))
       },
     }
   )

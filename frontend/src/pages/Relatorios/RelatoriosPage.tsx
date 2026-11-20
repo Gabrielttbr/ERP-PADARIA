@@ -3,6 +3,7 @@ import { format, subDays } from 'date-fns'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import RelatorioDinamico from './RelatorioDinamico'
+import { mensagemErro } from '@/utils/erro'
 
 const IconPDF = () => (
   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -39,7 +40,7 @@ function EmailModal({ dataInicio, dataFim, onClose }: { dataInicio: string; data
       toast.success(`Relatório enviado para ${destinatario}!`)
       onClose()
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Erro ao enviar e-mail')
+      toast.error(mensagemErro(err, 'Erro ao enviar e-mail'))
     } finally {
       setEnviando(false)
     }

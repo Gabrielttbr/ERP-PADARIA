@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
+import { mensagemErro } from '@/utils/erro'
 
 interface ContaBancaria {
   id: number
@@ -49,7 +50,7 @@ function NovaContaForm({ onCriada }: { onCriada: () => void }) {
         setBanco(''); setAgencia(''); setConta('')
         onCriada()
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao cadastrar conta') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao cadastrar conta')) },
     }
   )
 
@@ -88,7 +89,7 @@ function SugestoesLancamento({ lancamentoId, onConciliado }: { lancamentoId: num
     }),
     {
       onSuccess: () => { toast.success('Conciliado!'); onConciliado() },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao conciliar') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao conciliar')) },
     }
   )
 
@@ -96,7 +97,7 @@ function SugestoesLancamento({ lancamentoId, onConciliado }: { lancamentoId: num
     () => api.post(`/financeiro/lancamentos/${lancamentoId}/conciliar`, { tipo: 'ajuste_manual' }),
     {
       onSuccess: () => { toast.success('Marcado como conciliado (ajuste manual)'); onConciliado() },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao conciliar') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao conciliar')) },
     }
   )
 
@@ -166,7 +167,7 @@ export default function ConciliacaoBancaria() {
         toast.success(`${data.importados} lançamento(s) importado(s), ${data.duplicados} já existiam.`)
         qc.invalidateQueries(['lancamentos'])
       },
-      onError: (err: any) => { toast.error(err.response?.data?.detail ?? 'Erro ao importar o extrato') },
+      onError: (err: any) => { toast.error(mensagemErro(err, 'Erro ao importar o extrato')) },
     }
   )
 

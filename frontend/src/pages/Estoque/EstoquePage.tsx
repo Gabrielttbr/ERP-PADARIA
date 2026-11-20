@@ -5,6 +5,7 @@ import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
 import { useCurrencyInput } from '@/hooks/useCurrencyInput'
 import ImportarExcelModal from './ImportarExcelModal'
+import { mensagemErro } from '@/utils/erro'
 
 interface Produto {
   id: number
@@ -253,7 +254,7 @@ export default function EstoquePage() {
         setNovaCategoria('')
         // mantém novoParentId pra criar várias subcategorias do mesmo pai em lote
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao criar categoria') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao criar categoria')) },
     }
   )
 
@@ -266,7 +267,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('categorias')
         setEditandoCat(null)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao renomear') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao renomear')) },
     }
   )
 
@@ -279,7 +280,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('categorias')
         setMovendoCat(null)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao mover') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao mover')) },
     }
   )
 
@@ -292,7 +293,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('produtos')
         setConfirmDelCat(null)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao remover categoria') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao remover categoria')) },
     }
   )
 
@@ -304,7 +305,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('produtos')
         fecharForm()
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao cadastrar') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao cadastrar')) },
     }
   )
 
@@ -329,7 +330,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('produtos')
         fecharForm()
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao atualizar') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao atualizar')) },
     }
   )
 
@@ -341,7 +342,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('produtos')
         setConfirmDel(null)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro ao remover') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao remover')) },
     }
   )
 
@@ -356,7 +357,7 @@ export default function EstoquePage() {
         queryClient.invalidateQueries('produtos')
         setAjuste(null)
       },
-      onError: (e: any) => { toast.error(e.response?.data?.detail || 'Erro no ajuste') },
+      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro no ajuste')) },
     }
   )
 
