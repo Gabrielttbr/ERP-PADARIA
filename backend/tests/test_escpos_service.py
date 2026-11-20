@@ -39,6 +39,17 @@ def _item(nome="Pão Francês", qtd="2", preco="0.60", total="1.20", unidade="un
                       total_item=Decimal(total), unidade=unidade)
 
 
+@pytest.fixture(autouse=True)
+def dados_padaria(monkeypatch):
+    """Fixa cabeçalho/rodapé para o teste não depender do backend/.env local."""
+    for campo, valor in {
+        "padaria_nome": "Padaria Teste", "padaria_cnpj": "00.000.000/0001-00",
+        "padaria_endereco": "", "padaria_cidade": "", "padaria_telefone": "",
+        "padaria_mensagem_rodape": "Obrigado!",
+    }.items():
+        monkeypatch.setattr(es.settings, campo, valor)
+
+
 @pytest.fixture(params=[(80, 42), (58, 32)], ids=["80mm", "58mm"])
 def largura(request, monkeypatch):
     papel, cols = request.param
