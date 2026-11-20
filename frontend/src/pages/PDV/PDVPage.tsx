@@ -128,14 +128,23 @@ function AcaoRapida({ icone, label, cor, valor, onClick }: { icone: React.ReactN
   )
 }
 
-function ProdutoCard({ p, onClick }: { p: any; onClick: () => void }) {
+function ProdutoCard({ p, onClick, highlighted }: { p: any; onClick: () => void; highlighted?: boolean }) {
+  const cardRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (highlighted) cardRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [highlighted])
   return (
     <button
+      ref={cardRef}
       onClick={onClick}
       className="rounded-xl text-left flex flex-col overflow-hidden transition-colors min-h-[128px]"
-      style={{ background: COR.surface2, border: `1px solid ${COR.border}` }}
-      onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = COR.verde}
-      onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = COR.border}
+      style={{
+        background: COR.surface2,
+        border: `1px solid ${highlighted ? COR.verde : COR.border}`,
+        boxShadow: highlighted ? `0 0 0 2px ${COR.verde}44` : undefined,
+      }}
+      onMouseEnter={e => !highlighted && ((e.currentTarget as HTMLElement).style.borderColor = COR.verde)}
+      onMouseLeave={e => !highlighted && ((e.currentTarget as HTMLElement).style.borderColor = COR.border)}
     >
       {p.imagem_url ? (
         <img src={p.imagem_url} alt="" className="w-full h-16 object-cover" />
@@ -165,6 +174,7 @@ export default function PDVPage() {
   const [produtoPeso, setProdutoPeso] = useState<any>(null)
   const [descontoInput, setDescontoInput] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [cardFocusIdx, setCardFocusIdx] = useState<number>(-1)
   const [categoriaSel, setCategoriaSel] = useState<number | null>(null)
   const [itemSelecionado, setItemSelecionado] = useState<number | null>(null)
   const buscaRef = useRef<HTMLInputElement>(null)
@@ -194,6 +204,7 @@ export default function PDVPage() {
     // Produto vendido por peso/volume: abre modal para informar a quantidade
     if (isPeso(p.unidade_medida)) {
       setProdutoPeso(p)
+      setSearchTerm('')
       return
     }
 
@@ -201,6 +212,9 @@ export default function PDVPage() {
       produto_id: p.id, nome: p.nome, preco_unit: parseFloat(p.preco_venda),
       custo_unit: parseFloat(p.preco_custo ?? 0), quantidade: 1, desconto_unit: 0, unidade_medida: p.unidade_medida,
     })
+    setSearchTerm('')
+    setCardFocusIdx(-1)
+    setTimeout(() => buscaRef.current?.focus(), 0)
   }, [store])
 
   const handleScan = useCallback(async (codigo: string) => {
@@ -279,17 +293,26 @@ export default function PDVPage() {
                   className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none"
                   style={{ background: COR.surface2, border: `1px solid ${COR.border}`, color: COR.text }}
                   value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
+                  onChange={e => { setSearchTerm(e.target.value); setCardFocusIdx(-1) }}
                   onKeyDown={e => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                      e.preventDefault()
+                      setCardFocusIdx(i => Math.min(i + 1, filteredProdutos.length - 1))
+                      return
+                    }
+                    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                      e.preventDefault()
+                      setCardFocusIdx(i => Math.max(i - 1, 0))
+                      return
+                    }
                     if (e.key === 'Enter') {
-                      // Se for código 999, abre modal diverso
                       if (searchTerm.trim() === '999') {
                         setShowDiverso(true)
                         setSearchTerm('')
+                      } else if (cardFocusIdx >= 0 && filteredProdutos[cardFocusIdx]) {
+                        addProduto(filteredProdutos[cardFocusIdx])
                       } else if (filteredProdutos.length === 1) {
-                        // Caso contrário, adiciona o produto normalmente
                         addProduto(filteredProdutos[0])
-                        setSearchTerm('')
                       }
                     }
                   }}
@@ -324,8 +347,8 @@ export default function PDVPage() {
 
             <div className="flex-1 overflow-y-auto p-3">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2.5">
-                {filteredProdutos.map((p: any) => (
-                  <ProdutoCard key={p.id} p={p} onClick={() => addProduto(p)} />
+                {filteredProdutos.map((p: any, idx: number) => (
+                  <ProdutoCard key={p.id} p={p} onClick={() => addProduto(p)} highlighted={idx === cardFocusIdx} />
                 ))}
                 {filteredProdutos.length === 0 && (
                   <p className="col-span-full text-sm text-center py-8" style={{ color: COR.muted }}>Nenhum produto encontrado</p>
@@ -490,8 +513,9 @@ export default function PDVPage() {
           })
           setProdutoPeso(null)
           toast.success(p.nome, { position: 'bottom-center', duration: 1200 })
+          setTimeout(() => buscaRef.current?.focus(), 0)
         }}
-        onCancelar={() => setProdutoPeso(null)}
+        onCancelar={() => { setProdutoPeso(null); setTimeout(() => buscaRef.current?.focus(), 0) }}
       />
     </SessaoGuard>
   )
