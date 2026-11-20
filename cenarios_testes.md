@@ -488,12 +488,11 @@ Funcionalidade: Vendas por dia
     E o dia D deve mostrar R$ 70,50
     E a soma das barras deve ser igual ao "Fat. Líquido" do período
 
-  @bug-suspeito
   Cenário: Venda das 22h fica no dia certo do gráfico
     Dado uma venda de R$ 10,00 no dia D às 22:30 (Brasília)
     Quando consulto "Vendas por dia"
     Então a venda deve aparecer no dia D, e não em D+1
-    # Hoje o agrupamento usa a data em UTC. Ver P4.
+    # P4 corrigido: datas gravadas no horário de São Paulo.
 
   Cenário: Relatório PDF/Excel bate com o dashboard
     Dado que foi executado o roteiro do dia D
@@ -501,6 +500,13 @@ Funcionalidade: Vendas por dia
     Então ambos devem listar 3 vendas
     E o "TOTAL GERAL" deve ser R$ 70,50
     E a venda cancelada V4 não deve aparecer
+
+  Cenário: Relatório PDF/Excel inclui venda das 22h
+    Dado uma venda de R$ 10,00 no dia D às 22:30 (Brasília)
+    Quando exporto o relatório de vendas de D
+    Então a venda deve aparecer no relatório de D
+    E o horário mostrado deve ser 22:30
+    # P8 corrigido.
 ```
 
 ---
@@ -710,6 +716,41 @@ Funcionalidade: Movimentação de estoque
 
 ---
 
+## 9.1 Horário (fuso de São Paulo)
+
+```gherkin
+# language: pt
+@horario @api
+Funcionalidade: Horário do sistema em São Paulo
+  Todas as datas são gravadas e exibidas no horário de São Paulo,
+  independente do fuso do servidor.
+
+  Cenário: Recibo sai com a hora local
+    Dado que agora são 10:00 em São Paulo
+    Quando finalizo uma venda e imprimo o recibo
+    Então o recibo deve mostrar 10:00 (e não 13:00)
+
+  Cenário: Telas mostram a hora local
+    Dado que abri o caixa às 07:00 em São Paulo
+    Então a tela do caixa deve mostrar "desde 07:00"
+    E o PDV deve mostrar "Aberto às 07:00"
+    E a auditoria deve registrar a abertura às 07:00
+
+  Cenário: Servidor em UTC não muda o horário gravado
+    Dado que o container do backend está com fuso UTC
+    Quando finalizo uma venda às 10:00 em São Paulo
+    Então a venda deve ser gravada com 10:00
+
+  Cenário: Arquivo exportado do estoque usa a data local
+    Dado que são 22:00 do dia D em São Paulo
+    Quando exporto os produtos para Excel
+    Então o arquivo deve se chamar "produtos_<D>.xlsx" (e não D+1)
+```
+
+> Registros gravados antes dessa mudança estão em UTC (3h adiantados) e **não** foram convertidos.
+
+---
+
 ## 10. Pontos de atenção encontrados na leitura do código
 
 Achei estes pontos lendo o código. Os cenários `@bug-suspeito` acima servem para confirmar cada um.
@@ -719,11 +760,11 @@ Achei estes pontos lendo o código. Os cenários `@bug-suspeito` acima servem pa
 | P1 ✅ | `caixa_service.fechar_caixa`                                 | **Corrigido.** O saldo esperado somava **todas** as formas (PIX/cartão também). Agora é abertura + dinheiro − sangrias + suprimentos, no fechamento, na validação da sangria e na tela do caixa (com resumo por forma) | Diferenças gravadas em fechamentos **antigos** continuam erradas                                                                                         |
 | P2 ✅ | `venda_service` / resumo do fechamento                       | **Corrigido.** `Pagamento.valor` gravava o valor **entregue** (20,00) em vez do líquido do troco (18,00). Agora grava o líquido, o recibo continua mostrando o entregue, e PIX/cartão/vale acima do total é recusado | Vendas **antigas** continuam com o valor inflado no banco                                                                                                |
 | P3    | `dashboard_service.curva_abc`                                | O filtro de status/período está no `JOIN` de `Venda`, mas soma `ItemVenda.total_item` de qualquer jeito                                                                                                                        | Curva ABC soma vendas **canceladas** e **de outros períodos**                                                                                     |
-| P4    | `vendas_por_dia` e dimensão `dia` do relatório dinâmico | Agrupa por `date(created_at)` em **UTC**                                                                                                                                                                                       | Vendas depois das 21h aparecem no dia seguinte no gráfico                                                                                                     |
+| P4 ✅ | `vendas_por_dia` e dimensão `dia` do relatório dinâmico | **Corrigido.** Agrupava por `date(created_at)` em **UTC**; agora todas as datas são gravadas no horário de São Paulo (`agora()` em `utils/tempo.py`) | Vendas **antigas** (antes da mudança) continuam em UTC: as das 21h–24h aparecem no dia seguinte |
 | P5    | `calcular_kpis` → `itens_vendidos=int(...)`               | Soma kg + un e trunca pra inteiro                                                                                                                                                                                                      | 0,750 kg vira 0; misturar kg com unidade não dá um número que signifique algo                                                                               |
 | P6    | `calcular_kpis(caixa_id=...)`                                | Parâmetro recebido mas não usado no filtro                                                                                                                                                                                           | Filtro por caixa no dashboard não muda os KPIs                                                                                                                |
 | P7    | `Produto.margem_lucro` × "Margem Média"                    | Produto usa markup sobre o custo; dashboard usa margem sobre a venda                                                                                                                                                                   | Mesmo nome ("margem"), contas diferentes: o usuário pode estranhar                                                                                            |
-| P8    | `relatorio_service._buscar_vendas` (PDF/Excel)               | Usa `datetime.combine` sem fuso, diferente do dashboard                                                                                                                                                                              | Relatório PDF/Excel pode perder vendas das 21h–24h e divergir do dashboard                                                                                   |
+| P8 ✅ | `relatorio_service._buscar_vendas` (PDF/Excel) | **Corrigido.** Com as datas gravadas no horário local, o `datetime.combine` passou a estar certo e bate com o dashboard. O "Gerado em" também usa a hora local | Mesmo efeito do P4 nos registros antigos |
 | P9    | `pdvStore` × backend                                        | Carrinho não arredonda cada item, o backend arredonda                                                                                                                                                                                 | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg                                                                                 |
 
 ---
