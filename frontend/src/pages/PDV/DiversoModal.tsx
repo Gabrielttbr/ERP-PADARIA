@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   aberto: boolean
@@ -6,34 +6,53 @@ interface Props {
   onCancelar: () => void
 }
 
+function centavosParaFloat(centavos: string): number {
+  return parseInt(centavos || '0', 10) / 100
+}
+
+function formatarMascara(centavos: string): string {
+  const num = parseInt(centavos || '0', 10)
+  return (num / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props) {
-  const [preco, setPreco] = useState('')
+  const [precoCentavos, setPrecoCentavos] = useState('0')
   const [quantidade, setQuantidade] = useState('1')
   const [erro, setErro] = useState('')
+  const precoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (aberto) {
-      setPreco('')
+      setPrecoCentavos('0')
       setQuantidade('1')
       setErro('')
+      setTimeout(() => precoRef.current?.focus(), 50)
     }
   }, [aberto])
 
+  const handlePrecoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault()
+      setPrecoCentavos(v => v.length <= 1 ? '0' : v.slice(0, -1))
+      return
+    }
+    if (e.key === 'Enter') { handleConfirmar(); return }
+    if (!/^\d$/.test(e.key)) return
+    e.preventDefault()
+    setPrecoCentavos(v => {
+      const novo = v === '0' ? e.key : v + e.key
+      return novo.replace(/^0+(\d)/, '$1').slice(0, 10)
+    })
+  }
+
+  const precoFloat = centavosParaFloat(precoCentavos)
+  const quantidadeFloat = parseFloat(quantidade) || 0
+
   const handleConfirmar = () => {
     setErro('')
-
-    // Validações
-    if (!preco || parseFloat(preco) <= 0) {
-      setErro('Preço deve ser maior que zero')
-      return
-    }
-
-    if (!quantidade || parseFloat(quantidade) <= 0) {
-      setErro('Quantidade deve ser maior que zero')
-      return
-    }
-
-    onConfirmar(parseFloat(preco), parseFloat(quantidade))
+    if (precoFloat <= 0) { setErro('Preço deve ser maior que zero'); return }
+    if (quantidadeFloat <= 0) { setErro('Quantidade deve ser maior que zero'); return }
+    onConfirmar(precoFloat, quantidadeFloat)
   }
 
   if (!aberto) return null
@@ -47,17 +66,16 @@ export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props)
           {/* Preço */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
-              Preço (R$) *
+              Preço *
             </label>
             <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={preco}
-              onChange={(e) => setPreco(e.target.value)}
-              placeholder="0.00"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-green-500"
-              autoFocus
+              ref={precoRef}
+              type="text"
+              inputMode="numeric"
+              value={formatarMascara(precoCentavos)}
+              onKeyDown={handlePrecoKeyDown}
+              onChange={() => {}}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-lg font-bold tracking-wide focus:outline-none focus:border-green-500 cursor-text"
             />
           </div>
 
@@ -84,11 +102,11 @@ export default function DiversoModal({ aberto, onConfirmar, onCancelar }: Props)
           )}
 
           {/* Resumo */}
-          {preco && quantidade && !erro && (
+          {precoFloat > 0 && quantidadeFloat > 0 && !erro && (
             <div className="p-3 bg-slate-800 rounded-lg border border-slate-600">
               <p className="text-xs text-slate-400">Total (sem desconto):</p>
               <p className="text-lg font-bold text-green-400">
-                R$ {(parseFloat(preco) * parseFloat(quantidade)).toFixed(2)}
+                {(precoFloat * quantidadeFloat).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </div>
           )}
