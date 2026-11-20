@@ -89,6 +89,11 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
   // Troco só existe em dinheiro: PIX/cartão/vale não pode passar do que falta pagar.
   const excedeNaoDinheiro = formaAtual !== 'dinheiro' && valorAtual.float > restante + 0.001
 
+  // Pagamento único em dinheiro: campo vazio = valor exato (atalho do Enter); valor digitado
+  // menor que o total não fecha a venda (antes era trocado pelo total em silêncio — P12).
+  const faltaDinheiro = formaAtual === 'dinheiro' && pagamentos.length === 0
+    && valorAtual.float > 0 && valorAtual.float < total - 0.001
+
   const addPagamento = () => {
     const valor = valorAtual.float
     if (!valor || valor <= 0 || !maquinetaOk || excedeNaoDinheiro) return
@@ -104,7 +109,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     if (pagamentos.length === 0) {
       let valor: number
       if (formaAtual === 'dinheiro') {
-        valor = valorAtual.float > 0 ? Math.max(valorAtual.float, total) : total
+        valor = valorAtual.float > 0 ? valorAtual.float : total
       } else {
         valor = valorAtual.float > 0 ? valorAtual.float : total
       }
@@ -117,7 +122,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
   const podeConcluir = (pagamentos.length > 0
     ? totalPago >= total
     : formaAtual === 'dinheiro'
-      ? true
+      ? !faltaDinheiro
       : valorAtual.float >= total
   ) && maquinetaOk && !excedeNaoDinheiro
 
@@ -200,6 +205,11 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
               style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
               autoFocus
             />
+            {faltaDinheiro && (
+              <p data-testid="pagamento-falta" className="text-xs mt-1 text-center" style={{ color: '#f87171' }}>
+                Valor menor que o total. Faltam {formatBRL(total - valorAtual.float)}.
+              </p>
+            )}
             {excedeNaoDinheiro && (
               <p className="text-xs mt-1 text-center" style={{ color: '#f87171' }}>
                 Valor maior que o restante ({formatBRL(restante)}). Troco só em dinheiro.
