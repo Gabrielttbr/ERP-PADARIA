@@ -68,6 +68,22 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     setMaquineta(null)
   }, [formaAtual])
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      e.preventDefault()
+      setFormaAtual(prev => {
+        const idx = FORMAS.findIndex(f => f.key === prev)
+        const next = e.key === 'ArrowRight'
+          ? (idx + 1) % FORMAS.length
+          : (idx - 1 + FORMAS.length) % FORMAS.length
+        return FORMAS[next].key
+      })
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const maquinetaOk = !isCard(formaAtual) || !!maquineta
 
   const addPagamento = () => {
@@ -172,15 +188,6 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
               inputMode="numeric"
               value={valorAtual.display}
               onKeyDown={e => {
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                  e.preventDefault()
-                  const idx = FORMAS.findIndex(f => f.key === formaAtual)
-                  const next = e.key === 'ArrowRight'
-                    ? (idx + 1) % FORMAS.length
-                    : (idx - 1 + FORMAS.length) % FORMAS.length
-                  setFormaAtual(FORMAS[next].key)
-                  return
-                }
                 valorAtual.onKeyDown(e)
                 if (e.key === 'Enter') handleConfirm()
               }}
