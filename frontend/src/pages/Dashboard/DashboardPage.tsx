@@ -6,6 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { api } from '@/config/api'
 import { formatBRL } from '@/utils/currency'
 import { useAnimatedCounter } from '@/hooks/useAnimatedCounter'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
 
 const PERIODOS = [
   { label: 'Hoje',    days: 0  },
@@ -37,9 +38,9 @@ function TrendBadge({ trend }: { trend: number }) {
 // ── KPI Card ───────────────────────────────────────────────────────────────────
 
 function KpiCard({
-  label, rawValue, fmt, accentColor, icon, delay = 0, trend, featured = false
+  label, info, rawValue, fmt, accentColor, icon, delay = 0, trend, featured = false
 }: {
-  label: string; rawValue: number; fmt: 'brl' | 'pct' | 'num'
+  label: string; info: string; rawValue: number; fmt: 'brl' | 'pct' | 'num'
   accentColor: string; icon: React.ReactNode; delay?: number
   trend?: number; featured?: boolean
 }) {
@@ -87,9 +88,15 @@ function KpiCard({
       </div>
 
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wide mb-0.5" style={{ color: 'var(--clr-text-muted)' }}>
-          {label}
-        </p>
+        <div className="flex items-center gap-1 mb-0.5">
+          <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--clr-text-muted)' }}>
+            {label}
+          </p>
+          <InfoTooltip
+            label={`O que é ${label}?`}
+            text={trend !== undefined ? <>{info}<br /><br />{TREND_INFO}</> : info}
+          />
+        </div>
         <p className={`font-mono font-black truncate ${featured ? 'text-2xl' : 'text-xl'}`}
           style={{ color: 'var(--clr-text)' }}
         >
@@ -112,24 +119,30 @@ function SkeletonCard() {
 
 // ── KPI config ─────────────────────────────────────────────────────────────────
 
+const TREND_INFO = 'A seta indica a variação do faturamento líquido na segunda metade do período em relação à primeira.'
+
 const KPI_FINANCIAL = [
   {
     key: 'faturamento_bruto',   label: 'Faturamento Bruto',  fmt: 'brl' as const,
+    info: 'Soma do valor das vendas concluídas no período, antes de aplicar os descontos. Vendas canceladas não entram.',
     accent: '#16A34A', featured: true,
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
   },
   {
     key: 'faturamento_liquido', label: 'Fat. Líquido',        fmt: 'brl' as const,
+    info: 'O que efetivamente foi recebido: faturamento bruto menos os descontos concedidos nas vendas.',
     accent: '#2563EB',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>,
   },
   {
     key: 'lucro_bruto',         label: 'Lucro Bruto',         fmt: 'brl' as const,
+    info: 'Faturamento líquido menos o custo dos produtos vendidos. Não desconta despesas fixas (aluguel, salários, contas).',
     accent: '#059669',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>,
   },
   {
     key: 'margem_media',        label: 'Margem Média',        fmt: 'pct' as const,
+    info: 'Quanto do faturamento líquido vira lucro bruto. Ex.: 40% significa que, a cada R$ 100 vendidos, sobram R$ 40 após o custo dos produtos.',
     accent: '#7C3AED',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9 14.25l6-6M9.75 9.75a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm8.25 6a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>,
   },
@@ -138,21 +151,25 @@ const KPI_FINANCIAL = [
 const KPI_OPERATIONAL = [
   {
     key: 'quantidade_vendas',   label: 'Qtd. Vendas',         fmt: 'num' as const,
+    info: 'Número de vendas (atendimentos) concluídas no período. Vendas canceladas não contam.',
     accent: '#0891B2',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>,
   },
   {
     key: 'ticket_medio',        label: 'Ticket Médio',        fmt: 'brl' as const,
+    info: 'Valor médio gasto por venda: faturamento líquido dividido pela quantidade de vendas.',
     accent: '#D97706',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M16.5 6v.75a3.375 3.375 0 01-3.375 3.375h-1.5a3.375 3.375 0 01-3.375-3.375V6m10.5 0a2.25 2.25 0 00-2.25-2.25h-6A2.25 2.25 0 007.5 6m9 0h-9M3.75 21h16.5M5.625 15h12.75M3.75 17.25h16.5"/></svg>,
   },
   {
     key: 'custo_total',         label: 'Custo Total',         fmt: 'brl' as const,
+    info: 'Soma do custo dos produtos vendidos no período, usando o custo unitário registrado no momento de cada venda.',
     accent: '#DC2626',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181"/></svg>,
   },
   {
     key: 'itens_vendidos',      label: 'Itens Vendidos',      fmt: 'num' as const,
+    info: 'Soma das quantidades de todos os itens vendidos no período. Produtos vendidos por peso entram pela quantidade da unidade de medida (ex.: kg).',
     accent: '#64748B',
     icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg>,
   },
@@ -388,6 +405,7 @@ export default function DashboardPage() {
               <KpiCard
                 key={cfg.key}
                 label={cfg.label}
+                info={cfg.info}
                 rawValue={kpis ? parseFloat(kpis[cfg.key]) || 0 : 0}
                 fmt={cfg.fmt}
                 accentColor={cfg.accent}
@@ -412,6 +430,7 @@ export default function DashboardPage() {
               <KpiCard
                 key={cfg.key}
                 label={cfg.label}
+                info={cfg.info}
                 rawValue={kpis ? parseFloat(kpis[cfg.key]) || 0 : 0}
                 fmt={cfg.fmt}
                 accentColor={cfg.accent}
@@ -426,9 +445,15 @@ export default function DashboardPage() {
       {/* ── Maquinetas ── */}
       {(isLoading || maquinetas.length > 0) && (
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest mb-2.5 px-0.5" style={{ color: 'var(--clr-text-muted)' }}>
-            Recebimentos por Maquineta
-          </p>
+          <div className="flex items-center gap-1.5 mb-2.5 px-0.5">
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--clr-text-muted)' }}>
+              Recebimentos por Maquineta
+            </p>
+            <InfoTooltip
+              label="O que é Recebimentos por Maquineta?"
+              text="Total recebido em cartão por cada maquineta no período, separado em crédito e débito. Pagamentos em dinheiro e Pix não entram aqui."
+            />
+          </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {isLoading ? (
               [1,2,3,4].map(i => <SkeletonCard key={i} />)
@@ -485,8 +510,14 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid var(--clr-border)' }}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--clr-border)' }}>
             <div>
-              <h2 className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>Vendas por dia</h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--clr-text-muted)' }}>Faturamento bruto no período selecionado</p>
+              <div className="flex items-center gap-1.5">
+                <h2 className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>Vendas por dia</h2>
+                <InfoTooltip
+                  label="O que é Vendas por dia?"
+                  text="Faturamento líquido (já descontados os descontos) das vendas concluídas em cada dia do período. Passe o mouse sobre o gráfico para ver o valor de um dia específico."
+                />
+              </div>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--clr-text-muted)' }}>Faturamento líquido no período selecionado</p>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#40916C' }} />
@@ -529,7 +560,13 @@ export default function DashboardPage() {
         {/* Alertas */}
         <div className="bg-white rounded-2xl overflow-hidden flex flex-col" style={{ border: '1px solid var(--clr-border)' }}>
           <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--clr-border)' }}>
-            <h2 className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>Alertas de Estoque</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>Alertas de Estoque</h2>
+              <InfoTooltip
+                label="O que é Alertas de Estoque?"
+                text="Produtos ativos com estoque igual ou abaixo do mínimo cadastrado. Em vermelho: urgente (zerado ou abaixo de 30% do mínimo). Em amarelo: abaixo do mínimo. Mostra a situação atual, independente do período selecionado."
+              />
+            </div>
             {alertas.length > 0 && (
               <span className="text-[11px] font-black px-2 py-0.5 rounded-full"
                 style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FCA5A5' }}
@@ -587,7 +624,13 @@ export default function DashboardPage() {
       <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid var(--clr-border)' }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--clr-border)' }}>
           <div>
-            <h2 className="font-bold" style={{ color: 'var(--clr-text)' }}>Curva ABC — Top Produtos</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="font-bold" style={{ color: 'var(--clr-text)' }}>Curva ABC — Top Produtos</h2>
+              <InfoTooltip
+                label="O que é Curva ABC?"
+                text="Ranking dos 10 produtos que mais faturaram no período. Classe A: produtos que, somados, geram os primeiros 80% do faturamento (os mais importantes). Classe B: os próximos 15%. Classe C: os 5% restantes."
+              />
+            </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--clr-text-muted)' }}>Participação no faturamento do período</p>
           </div>
           <div className="hidden sm:flex items-center gap-3 text-xs font-semibold" style={{ color: 'var(--clr-text-muted)' }}>
