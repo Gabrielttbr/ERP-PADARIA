@@ -9,6 +9,7 @@ Os valores esperados foram **calculados a partir das fórmulas reais do backend*
 então dá para executar à mão no sistema ou automatizar com `pytest-bdd` depois.
 
 > Convenções
+>
 > - `@manual` = executar pela interface · `@api` = dá para automatizar via endpoint
 > - `@bug-suspeito` = cenário que, pela leitura do código, **deve falhar hoje** (ver seção final)
 > - Valores em R$, arredondamento comercial (ROUND_HALF_UP) com 2 casas; quantidades por kg com 3 casas.
@@ -21,46 +22,46 @@ Base limpa, fuso `America/Sao_Paulo`, um único dia de teste (**D**).
 
 ### Categorias
 
-| Categoria   | Produtos              |
-|-------------|-----------------------|
-| Pães        | Pão Francês           |
-| Lanchonete  | Café Expresso, Fatia de Bolo |
-| Frios       | Mussarela             |
+| Categoria  | Produtos                      |
+| ---------- | ----------------------------- |
+| Pães      | Pão Francês                 |
+| Lanchonete | Café Expresso, Fatia de Bolo |
+| Frios      | Mussarela                     |
 
 ### Produtos
 
 | Produto        | Unid. | Preço custo | Preço venda | Estoque inicial |
-|----------------|-------|------------:|------------:|----------------:|
-| Pão Francês    | kg    |  6,00       | 16,00       | 20,000 kg       |
-| Café Expresso  | un    |  1,50       |  5,00       | 100             |
-| Fatia de Bolo  | un    |  3,00       |  8,00       | 30              |
-| Mussarela      | kg    | 32,00       | 50,00       | 10,000 kg       |
+| -------------- | ----- | -----------: | -----------: | --------------: |
+| Pão Francês  | kg    |         6,00 |        16,00 |       20,000 kg |
+| Café Expresso | un    |         1,50 |         5,00 |             100 |
+| Fatia de Bolo  | un    |         3,00 |         8,00 |              30 |
+| Mussarela      | kg    |        32,00 |        50,00 |       10,000 kg |
 
 ### Roteiro do dia D (o "dia padrão")
 
-| Venda | Itens                                   | Subtotal | Desconto        | Total  | Pagamento                      | Custo  | Status        |
-|-------|-----------------------------------------|---------:|-----------------|-------:|--------------------------------|-------:|---------------|
-| V1    | 0,500 kg Pão (8,00) + 2 Café (10,00)    | 18,00    | —               | 18,00  | Dinheiro 20,00 (troco 2,00)    |  6,00  | concluída     |
-| V2    | 3 Bolo (24,00) + 0,250 kg Mussarela (12,50) | 36,50 | R$ 6,50        | 30,00  | PIX 30,00                      | 17,00  | concluída     |
-| V3    | 1,250 kg Pão (20,00) + 1 Café (5,00)    | 25,00    | 10% = 2,50      | 22,50  | Débito 22,50 — Maquineta 1     |  9,00  | concluída     |
-| V4    | 4 Café (20,00)                          | 20,00    | —               | 20,00  | Dinheiro 20,00                 |  6,00  | **cancelada** |
+| Venda | Itens                                       | Subtotal | Desconto   | Total | Pagamento                    | Custo | Status              |
+| ----- | ------------------------------------------- | -------: | ---------- | ----: | ---------------------------- | ----: | ------------------- |
+| V1    | 0,500 kg Pão (8,00) + 2 Café (10,00)      |    18,00 | —         | 18,00 | Dinheiro 20,00 (troco 2,00)  |  6,00 | concluída          |
+| V2    | 3 Bolo (24,00) + 0,250 kg Mussarela (12,50) |    36,50 | R$ 6,50    | 30,00 | PIX 30,00                    | 17,00 | concluída          |
+| V3    | 1,250 kg Pão (20,00) + 1 Café (5,00)      |    25,00 | 10% = 2,50 | 22,50 | Débito 22,50 — Maquineta 1 |  9,00 | concluída          |
+| V4    | 4 Café (20,00)                             |    20,00 | —         | 20,00 | Dinheiro 20,00               |  6,00 | **cancelada** |
 
 Caixa: abertura **R$ 100,00**, sangria **R$ 30,00**, suprimento **R$ 50,00**.
 
 ### Resultado esperado do dia D (gabarito)
 
-| Indicador                     | Valor esperado | Como chega                         |
-|-------------------------------|---------------:|------------------------------------|
-| Faturamento bruto             | R$ 79,50       | 18,00 + 36,50 + 25,00 (subtotais)  |
-| Descontos                     | R$ 9,00        | 6,50 + 2,50                        |
-| Faturamento líquido           | R$ 70,50       | 18,00 + 30,00 + 22,50              |
-| Custo total                   | R$ 32,00       | 6,00 + 17,00 + 9,00                |
-| Lucro bruto                   | R$ 38,50       | 70,50 − 32,00                      |
-| Margem média                  | 54,61 %        | 38,50 / 70,50                      |
-| Qtd. vendas                   | 3              | V4 cancelada não conta             |
-| Ticket médio                  | R$ 23,50       | 70,50 / 3                          |
-| Itens vendidos                | 8              | 0,5+2+3+0,25+1,25+1                |
-| Total vendas da sessão        | R$ 70,50       | V4 entra e sai no cancelamento     |
+| Indicador               | Valor esperado | Como chega                        |
+| ----------------------- | -------------: | --------------------------------- |
+| Faturamento bruto       |       R$ 79,50 | 18,00 + 36,50 + 25,00 (subtotais) |
+| Descontos               |        R$ 9,00 | 6,50 + 2,50                       |
+| Faturamento líquido    |       R$ 70,50 | 18,00 + 30,00 + 22,50             |
+| Custo total             |       R$ 32,00 | 6,00 + 17,00 + 9,00               |
+| Lucro bruto             |       R$ 38,50 | 70,50 − 32,00                    |
+| Margem média           |        54,61 % | 38,50 / 70,50                     |
+| Qtd. vendas             |              3 | V4 cancelada não conta           |
+| Ticket médio           |       R$ 23,50 | 70,50 / 3                         |
+| Itens vendidos          |              8 | 0,5+2+3+0,25+1,25+1               |
+| Total vendas da sessão |       R$ 70,50 | V4 entra e sai no cancelamento    |
 
 ---
 
@@ -329,18 +330,26 @@ Funcionalidade: Fechamento de caixa
       | Total de vendas      | 70,50  |
     # P2 corrigido: "Dinheiro" mostra 18,00 (valor líquido do troco).
 
-  @bug-suspeito
   Cenário: Diferença de caixa considera só o dinheiro físico
     # Dinheiro na gaveta = 100,00 abertura + 18,00 vendas em dinheiro − 30,00 sangria + 50,00 suprimento
     Quando fecho o caixa informando R$ 138,00 contados na gaveta
     Então a diferença deve ser R$ 0,00
-    # Hoje o sistema espera 190,50 (soma PIX e cartão no saldo) e mostra diferença −52,50. Ver P1.
+    # P1 corrigido: o esperado conta só o dinheiro (antes esperava 190,50 e mostrava −52,50).
 
-  @bug-suspeito
+  Cenário: Tela do caixa mostra o resumo por forma e o esperado na gaveta
+    Quando abro a tela /caixa com a sessão ainda aberta
+    Então devo ver "Dinheiro" R$ 18,00, "PIX" R$ 30,00, "Cartão" R$ 22,50 e "Total vendido" R$ 70,50
+    E "Esperado na gaveta" deve ser R$ 138,00
+    E deve aparecer o aviso de que o valor só bate se sangrias e suprimentos foram registrados
+
+  Cenário: Sangria não pode usar dinheiro de PIX ou cartão
+    Dado um caixa aberto com R$ 10,00 e uma venda de R$ 50,00 no PIX
+    Quando tento registrar uma sangria de R$ 40,00
+    Então devo receber erro "Saldo insuficiente para sangria"
+
   Cenário: Fechamento com falta de dinheiro
     Quando fecho o caixa informando R$ 135,00
     Então a diferença deve ser negativa em R$ 3,00
-    # Depende de P1. Hoje o sistema mostraria −55,50.
 
   Cenário: Total do caixa fechado aparece no dashboard do dia
     Quando fecho o caixa
@@ -705,17 +714,17 @@ Funcionalidade: Movimentação de estoque
 
 Achei estes pontos lendo o código. Os cenários `@bug-suspeito` acima servem para confirmar cada um.
 
-| #  | Onde | O que acontece hoje | Impacto |
-|----|------|---------------------|---------|
-| P1 | `caixa_service.fechar_caixa` | `saldo_esperado = abertura + total_vendas − sangrias + suprimentos` usa **todas** as formas (PIX/cartão também) | No dia D o sistema espera R$ 190,50 na gaveta, mas só há R$ 138,00 → diferença falsa de −52,50. A sangria também é validada contra esse saldo inflado |
-| P2 ✅ | `venda_service` / resumo do fechamento | **Corrigido.** `Pagamento.valor` gravava o valor **entregue** (20,00) em vez do líquido do troco (18,00). Agora grava o líquido, o recibo continua mostrando o entregue, e PIX/cartão/vale acima do total é recusado | Vendas **antigas** continuam com o valor inflado no banco |
-| P3 | `dashboard_service.curva_abc` | O filtro de status/período está no `JOIN` de `Venda`, mas soma `ItemVenda.total_item` de qualquer jeito | Curva ABC soma vendas **canceladas** e **de outros períodos** |
-| P4 | `vendas_por_dia` e dimensão `dia` do relatório dinâmico | Agrupa por `date(created_at)` em **UTC** | Vendas depois das 21h aparecem no dia seguinte no gráfico |
-| P5 | `calcular_kpis` → `itens_vendidos=int(...)` | Soma kg + un e trunca pra inteiro | 0,750 kg vira 0; misturar kg com unidade não dá um número que signifique algo |
-| P6 | `calcular_kpis(caixa_id=...)` | Parâmetro recebido mas não usado no filtro | Filtro por caixa no dashboard não muda os KPIs |
-| P7 | `Produto.margem_lucro` × "Margem Média" | Produto usa markup sobre o custo; dashboard usa margem sobre a venda | Mesmo nome ("margem"), contas diferentes: o usuário pode estranhar |
-| P8 | `relatorio_service._buscar_vendas` (PDF/Excel) | Usa `datetime.combine` sem fuso, diferente do dashboard | Relatório PDF/Excel pode perder vendas das 21h–24h e divergir do dashboard |
-| P9 | `pdvStore` × backend | Carrinho não arredonda cada item, o backend arredonda | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg |
+| #     | Onde                                                           | O que acontece hoje                                                                                                                                                                                                                    | Impacto                                                                                                                                                        |
+| ----- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1 ✅ | `caixa_service.fechar_caixa`                                 | **Corrigido.** O saldo esperado somava **todas** as formas (PIX/cartão também). Agora é abertura + dinheiro − sangrias + suprimentos, no fechamento, na validação da sangria e na tela do caixa (com resumo por forma) | Diferenças gravadas em fechamentos **antigos** continuam erradas                                                                                         |
+| P2 ✅ | `venda_service` / resumo do fechamento                       | **Corrigido.** `Pagamento.valor` gravava o valor **entregue** (20,00) em vez do líquido do troco (18,00). Agora grava o líquido, o recibo continua mostrando o entregue, e PIX/cartão/vale acima do total é recusado | Vendas **antigas** continuam com o valor inflado no banco                                                                                                |
+| P3    | `dashboard_service.curva_abc`                                | O filtro de status/período está no `JOIN` de `Venda`, mas soma `ItemVenda.total_item` de qualquer jeito                                                                                                                        | Curva ABC soma vendas **canceladas** e **de outros períodos**                                                                                     |
+| P4    | `vendas_por_dia` e dimensão `dia` do relatório dinâmico | Agrupa por `date(created_at)` em **UTC**                                                                                                                                                                                       | Vendas depois das 21h aparecem no dia seguinte no gráfico                                                                                                     |
+| P5    | `calcular_kpis` → `itens_vendidos=int(...)`               | Soma kg + un e trunca pra inteiro                                                                                                                                                                                                      | 0,750 kg vira 0; misturar kg com unidade não dá um número que signifique algo                                                                               |
+| P6    | `calcular_kpis(caixa_id=...)`                                | Parâmetro recebido mas não usado no filtro                                                                                                                                                                                           | Filtro por caixa no dashboard não muda os KPIs                                                                                                                |
+| P7    | `Produto.margem_lucro` × "Margem Média"                    | Produto usa markup sobre o custo; dashboard usa margem sobre a venda                                                                                                                                                                   | Mesmo nome ("margem"), contas diferentes: o usuário pode estranhar                                                                                            |
+| P8    | `relatorio_service._buscar_vendas` (PDF/Excel)               | Usa `datetime.combine` sem fuso, diferente do dashboard                                                                                                                                                                              | Relatório PDF/Excel pode perder vendas das 21h–24h e divergir do dashboard                                                                                   |
+| P9    | `pdvStore` × backend                                        | Carrinho não arredonda cada item, o backend arredonda                                                                                                                                                                                 | Possível diferença de R$ 0,01 entre a tela e a venda gravada em itens por kg                                                                                 |
 
 ---
 
