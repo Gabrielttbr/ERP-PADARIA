@@ -584,6 +584,7 @@ export default function EstoquePage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-1 justify-end">
                     <button
+                      data-testid="acao-ajuste"
                       onClick={() => setAjuste({ produto: p, tipo: 'entrada', quantidade: '', observacao: '' })}
                       className="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors"
                       style={{ color: 'var(--clr-green)', background: 'var(--clr-green-pale)', border: '1px solid var(--clr-border)' }}
@@ -593,6 +594,7 @@ export default function EstoquePage() {
                       Ajustar
                     </button>
                     <button
+                      data-testid="acao-editar"
                       onClick={() => abrirEditar(p)}
                       className="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors"
                       style={{ color: '#1D4ED8', background: '#EFF6FF', border: '1px solid #BFDBFE' }}
@@ -602,6 +604,7 @@ export default function EstoquePage() {
                       Editar
                     </button>
                     <button
+                      data-testid="acao-excluir"
                       onClick={() => setConfirmDel(p)}
                       className="text-xs font-medium px-2.5 py-1 rounded-lg transition-colors"
                       style={{ color: 'var(--clr-danger)', background: 'var(--clr-danger-bg)', border: '1px solid #FCA5A5' }}
@@ -697,6 +700,7 @@ export default function EstoquePage() {
               <div>
                 <label className="label">Categoria *</label>
                 <select
+                  data-testid="produto-categoria"
                   value={form.categoria_id}
                   onChange={e => setForm(f => ({ ...f, categoria_id: e.target.value }))}
                   className="input"
@@ -716,6 +720,7 @@ export default function EstoquePage() {
                   <input
                     type="text"
                     inputMode="numeric"
+                    data-testid="produto-preco-venda"
                     value={precoVenda.display}
                     onKeyDown={precoVenda.onKeyDown}
                     onChange={() => {}}
@@ -727,6 +732,7 @@ export default function EstoquePage() {
                   <input
                     type="text"
                     inputMode="numeric"
+                    data-testid="produto-preco-custo"
                     value={precoCusto.display}
                     onKeyDown={precoCusto.onKeyDown}
                     onChange={() => {}}
@@ -739,6 +745,7 @@ export default function EstoquePage() {
                 <div>
                   <label className="label">Unidade</label>
                   <select
+                    data-testid="produto-unidade"
                     value={form.unidade_medida}
                     onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
                     className="input"
@@ -751,6 +758,7 @@ export default function EstoquePage() {
                   <input
                     type="text"
                     inputMode="decimal"
+                    data-testid="produto-estoque"
                     value={form.estoque_atual}
                     onChange={e => setForm(f => ({ ...f, estoque_atual: e.target.value }))}
                     className="input font-mono text-right"
@@ -762,6 +770,7 @@ export default function EstoquePage() {
                   <input
                     type="text"
                     inputMode="decimal"
+                    data-testid="produto-estoque-minimo"
                     value={form.estoque_minimo}
                     onChange={e => setForm(f => ({ ...f, estoque_minimo: e.target.value }))}
                     className="input font-mono text-right"
@@ -776,7 +785,7 @@ export default function EstoquePage() {
                   style={{ background: 'var(--clr-green-pale)', border: '1px solid var(--clr-border)' }}
                 >
                   <span className="text-sm" style={{ color: 'var(--clr-text-muted)' }}>Margem estimada</span>
-                  <span className="font-mono font-bold text-sm" style={{ color: 'var(--clr-green)' }}>
+                  <span data-testid="produto-margem" className="font-mono font-bold text-sm" style={{ color: 'var(--clr-green)' }}>
                     {(((parseFloat(form.preco_venda) - parseFloat(form.preco_custo)) / parseFloat(form.preco_custo)) * 100).toFixed(1)}%
                   </span>
                 </div>
@@ -786,6 +795,7 @@ export default function EstoquePage() {
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={fecharForm} className="btn-bakery flex-1">Cancelar</button>
               <button
+                data-testid="produto-salvar"
                 onClick={salvar}
                 disabled={criarM.isLoading || editarM.isLoading}
                 className="btn-action flex-1"
@@ -827,6 +837,7 @@ export default function EstoquePage() {
               <div>
                 <label className="label">Tipo de movimentação</label>
                 <select
+                  data-testid="ajuste-tipo"
                   value={ajuste.tipo}
                   onChange={e => setAjuste({ ...ajuste, tipo: e.target.value })}
                   className="input"
@@ -844,6 +855,7 @@ export default function EstoquePage() {
                 <input
                   type="text"
                   inputMode="decimal"
+                  data-testid="ajuste-quantidade"
                   value={ajuste.quantidade}
                   onChange={e => setAjuste({ ...ajuste, quantidade: e.target.value })}
                   className="input text-xl font-mono text-center h-14"
@@ -866,6 +878,7 @@ export default function EstoquePage() {
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => setAjuste(null)} className="btn-bakery flex-1">Cancelar</button>
               <button
+                data-testid="ajuste-confirmar"
                 onClick={() => ajusteM.mutate({
                   produto_id: ajuste.produto.id,
                   tipo: ajuste.tipo,
@@ -948,6 +961,7 @@ export default function EstoquePage() {
                     Criar dentro de:
                   </label>
                   <select
+                    data-testid="categoria-pai"
                     value={novoParentId}
                     onChange={e => setNovoParentId(e.target.value)}
                     className="input text-sm"
@@ -984,6 +998,9 @@ export default function EstoquePage() {
                   return (
                     <div
                       key={c.id}
+                      data-testid="categoria-item"
+                      data-nome={c.nome}
+                      data-nivel={c.nivel}
                       className="relative flex items-center justify-between gap-3 px-3 py-2 rounded-lg"
                       style={{
                         background: c.nivel === 0 ? 'var(--clr-green-pale)' : 'var(--clr-bg)',

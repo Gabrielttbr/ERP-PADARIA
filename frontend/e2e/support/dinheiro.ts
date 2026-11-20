@@ -8,7 +8,7 @@ export function brl(valor: number): string {
 /** Regex que casa o valor em R$ independente do tipo de espaço após "R$". */
 export function reBrl(valor: number): RegExp {
   const num = brl(valor).replace(/^R\$\s*/, '').replace(/\./g, '\\.')
-  return new RegExp(`R\\$\\s*${num}(?!\\d)`)
+  return new RegExp(`R\\$\\s*${num}`)
 }
 
 /** Intervalo entre teclas: digitação humana. Mais rápido que isso, o

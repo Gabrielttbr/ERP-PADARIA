@@ -596,7 +596,7 @@ export default function DashboardPage() {
                   const urgente = a.urgente || parseFloat(a.estoque_atual) <= 0
                   const cor = urgente ? '#DC2626' : '#D97706'
                   return (
-                    <li key={a.produto_id} className="flex items-center gap-3 px-4 py-2.5"
+                    <li key={a.produto_id} data-testid="alerta-estoque" data-urgente={urgente ? 'sim' : 'nao'} className="flex items-center gap-3 px-4 py-2.5"
                       style={{
                         borderBottom: i < alertas.length - 1 ? '1px solid var(--clr-border)' : 'none',
                         borderLeft: `3px solid ${cor}`,
