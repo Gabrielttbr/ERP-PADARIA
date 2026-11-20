@@ -86,9 +86,12 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
 
   const maquinetaOk = !isCard(formaAtual) || !!maquineta
 
+  // Troco só existe em dinheiro: PIX/cartão/vale não pode passar do que falta pagar.
+  const excedeNaoDinheiro = formaAtual !== 'dinheiro' && valorAtual.float > restante + 0.001
+
   const addPagamento = () => {
     const valor = valorAtual.float
-    if (!valor || valor <= 0 || !maquinetaOk) return
+    if (!valor || valor <= 0 || !maquinetaOk || excedeNaoDinheiro) return
     setPagamentos(prev => [...prev, { forma: formaAtual, valor, nsu: maquineta ?? undefined }])
     valorAtual.reset()
     setMaquineta(null)
@@ -116,7 +119,7 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
     : formaAtual === 'dinheiro'
       ? true
       : valorAtual.float >= total
-  ) && maquinetaOk
+  ) && maquinetaOk && !excedeNaoDinheiro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
@@ -196,6 +199,11 @@ export default function PaymentModal({ total, onConfirm, onCancel, isLoading }: 
               style={{ background: '#222224', border: '1px solid rgba(255,255,255,0.08)', color: '#f5f5f5' }}
               autoFocus
             />
+            {excedeNaoDinheiro && (
+              <p className="text-xs mt-1 text-center" style={{ color: '#f87171' }}>
+                Valor maior que o restante ({formatBRL(restante)}). Troco só em dinheiro.
+              </p>
+            )}
           </div>
 
           {troco > 0 && (

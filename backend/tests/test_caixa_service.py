@@ -75,3 +75,20 @@ async def test_suprimento_aumenta_saldo(db):
     # Com suprimento no saldo, agora a sangria de 80 passa.
     await registrar_sangria(s.id, SangriaRequest(valor=Decimal("80.00"), motivo="ok"), u.id, db)
     assert s.total_sangrias == Decimal("80.00")
+
+
+async def test_fechamento_dinheiro_soma_o_que_ficou_na_gaveta(db):
+    # Venda de 18,00 paga com 20,00 (troco 2,00) + venda de 30,00 no PIX.
+    # "Dinheiro" no fechamento tem que ser 18,00, não os 20,00 entregues.
+    u = await criar_usuario(db)
+    s = await criar_sessao(db, u.id, valor_abertura="100.00")
+    p = await criar_produto(db, preco_venda="9.00", estoque="100")
+    await _vender(db, s.id, u.id, p.id, "2", "dinheiro", "20.00")
+    await _vender(db, s.id, u.id, p.id, "1", "pix", "9.00")
+
+    resumo = await fechar_caixa(s.id, FechamentoCaixaRequest(valor_fechamento=Decimal("127.00")), u.id, db)
+
+    assert resumo.total_dinheiro == Decimal("18.00")
+    assert resumo.total_pix == Decimal("9.00")
+    # Soma das formas = total vendido na sessão.
+    assert resumo.total_dinheiro + resumo.total_pix == resumo.sessao.total_vendas

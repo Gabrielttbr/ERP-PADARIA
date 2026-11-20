@@ -88,8 +88,26 @@ async def criar_venda(
             detail=f"Valor pago ({total_pago}) é menor que o total ({total})",
         )
 
-    formas_dinheiro = {p.forma for p in payload.pagamentos if p.forma == "dinheiro"}
-    troco = (total_pago - total).quantize(TWO, ROUND_HALF_UP) if formas_dinheiro else Decimal("0.00")
+    # Troco só sai da gaveta: PIX/cartão/vale pagos a mais não têm como
+    # devolver, então a parte não-dinheiro não pode passar do total.
+    total_nao_dinheiro = sum(
+        (p.valor for p in payload.pagamentos if p.forma != "dinheiro"), Decimal("0.00")
+    ).quantize(TWO, ROUND_HALF_UP)
+    if total_nao_dinheiro > total:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Pagamento em PIX/cartão/vale ({total_nao_dinheiro}) maior que o total "
+                f"({total}). Troco só pode ser dado em dinheiro."
+            ),
+        )
+
+    troco = (total_pago - total).quantize(TWO, ROUND_HALF_UP)
+
+    # Cada pagamento é gravado pelo valor que ficou na venda (líquido do troco).
+    # Sem isso, "Dinheiro" no fechamento soma o que o cliente entregou (ex.: 20,00
+    # numa compra de 18,00) e não o que ficou na gaveta.
+    valores_aplicados = _aplicar_troco(payload.pagamentos, troco)
 
     # ── 6. Cria Venda ────────────────────────────────────────────────────
     now = datetime.utcnow()
@@ -125,11 +143,13 @@ async def criar_venda(
         db.add(item)
 
     # ── 7b. Cria pagamentos ──────────────────────────────────────────────
-    for pag_in in payload.pagamentos:
+    for pag_in, valor_aplicado in zip(payload.pagamentos, valores_aplicados):
+        if valor_aplicado <= 0:
+            continue  # dinheiro que virou troco inteiro não é recebimento
         pag = Pagamento(
             venda_id=venda.id,
             forma=pag_in.forma,
-            valor=pag_in.valor.quantize(TWO, ROUND_HALF_UP),
+            valor=valor_aplicado,
             nsu=pag_in.nsu,
             operadora_id=pag_in.operadora_id,
             bandeira=pag_in.bandeira,
@@ -271,6 +291,26 @@ async def cancelar_venda(
 
 
 # ── Helpers privados ───────────────────────────────────────────────────────────
+
+def _aplicar_troco(pagamentos, troco: Decimal) -> list[Decimal]:
+    """Valor que cada pagamento efetivamente deixou na venda.
+
+    O troco é abatido dos pagamentos em dinheiro, do último para o primeiro.
+    Como a parte não-dinheiro nunca passa do total (validado antes), o
+    dinheiro sempre cobre o troco inteiro.
+    """
+    valores = [p.valor.quantize(TWO, ROUND_HALF_UP) for p in pagamentos]
+    restante = troco
+    for i in reversed(range(len(pagamentos))):
+        if restante <= 0:
+            break
+        if pagamentos[i].forma != "dinheiro":
+            continue
+        abatido = min(valores[i], restante)
+        valores[i] -= abatido
+        restante -= abatido
+    return valores
+
 
 async def _get_sessao_aberta(sessao_id: int, db: AsyncSession) -> SessaoCaixa:
     result = await db.execute(

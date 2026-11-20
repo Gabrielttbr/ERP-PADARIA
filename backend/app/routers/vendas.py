@@ -172,10 +172,23 @@ async def _montar_dados_recibo(venda: Venda, operador_nome: str, db: AsyncSessio
         subtotal=venda.subtotal,
         desconto=venda.desconto_valor,
         total=venda.total,
-        pagamentos=[{"forma": p.forma, "valor": p.valor} for p in venda.pagamentos],
+        pagamentos=_pagamentos_recebidos(venda),
         troco=venda.troco,
         data_hora=venda.created_at,
     )
+
+
+def _pagamentos_recebidos(venda: Venda) -> list[dict]:
+    """Pagamento grava o valor líquido do troco; no recibo o cliente vê o que
+    entregou. Devolve o troco ao último pagamento em dinheiro."""
+    pagamentos = [{"forma": p.forma, "valor": p.valor} for p in venda.pagamentos]
+    if venda.troco and venda.troco > 0:
+        dinheiro = [p for p in pagamentos if p["forma"] == "dinheiro"]
+        if dinheiro:
+            dinheiro[-1]["valor"] = dinheiro[-1]["valor"] + venda.troco
+        else:  # dinheiro virou troco inteiro e não foi gravado
+            pagamentos.append({"forma": "dinheiro", "valor": venda.troco})
+    return pagamentos
 
 
 async def _imprimir_recibo(venda: Venda, operador_nome: str, db: AsyncSession):
