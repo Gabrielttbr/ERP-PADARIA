@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { BACKEND_DIR, E2E_ENV } from './env'
 
-export type PerfilSeed = 'base' | 'dia-d' | 'noite'
+export type PerfilSeed = 'base' | 'dia-d' | 'noite' | 'dia-d-e-ontem'
 
 /**
  * Reseta o banco de teste para um estado conhecido (backend/tests/e2e_seed.py).

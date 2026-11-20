@@ -5,6 +5,7 @@ Uso (a partir de backend/, com o MESMO DATABASE_URL_OVERRIDE do backend em teste
     python -m tests.e2e_seed base    # massa de dados da seção 0 do cenarios_testes.md
     python -m tests.e2e_seed dia-d   # base + roteiro do dia D (V1–V4, sangria, suprimento)
     python -m tests.e2e_seed noite   # base + venda de R$ 10,00 ontem às 22:30
+    python -m tests.e2e_seed dia-d-e-ontem  # dia D + venda de R$ 10,00 ontem às 22:30
 
 Apaga todas as linhas e recria tudo, então cada spec começa de um estado conhecido.
 As vendas do dia D passam pelos services reais (mesmas regras do PDV).
@@ -25,7 +26,7 @@ from sqlalchemy import delete  # noqa: E402
 
 from app.database import AsyncSessionLocal, Base, engine  # noqa: E402
 import app.models  # noqa: E402,F401  — registra todos os models
-from app.models.caixa import Caixa  # noqa: E402
+from app.models.caixa import Caixa, SessaoCaixa  # noqa: E402
 from app.models.produto import Categoria, Produto  # noqa: E402
 from app.models.usuario import Usuario  # noqa: E402
 from app.schemas.caixa import AberturaCaixaRequest, SangriaRequest, SuprimentoRequest  # noqa: E402
@@ -125,7 +126,19 @@ async def _noite(db) -> None:
     venda.created_at = datetime.combine(ontem, datetime.min.time()).replace(hour=22, minute=30)
 
 
-PERFIS = {"base": _base, "dia-d": _dia_d, "noite": _noite}
+async def _dia_d_e_ontem(db) -> None:
+    """Dia D (hoje) + uma venda de R$ 10,00 ontem às 22:30, na mesma sessão."""
+    await _dia_d(db)
+    sessao = (await db.execute(SessaoCaixa.__table__.select())).first()
+    cafe = (await db.execute(Produto.__table__.select().where(Produto.nome == "Café Expresso"))).first()
+    admin = (await db.execute(Usuario.__table__.select().where(Usuario.email == "admin@padaria.com"))).first()
+    venda = await venda_service.criar_venda(_venda(sessao.id, [(cafe, "2")], [("dinheiro", "10.00", None)]),
+                                            admin.id, db)
+    ontem = hoje_local() - timedelta(days=1)
+    venda.created_at = datetime.combine(ontem, datetime.min.time()).replace(hour=22, minute=30)
+
+
+PERFIS = {"base": _base, "dia-d": _dia_d, "noite": _noite, "dia-d-e-ontem": _dia_d_e_ontem}
 
 
 async def main(perfil: str) -> None:
