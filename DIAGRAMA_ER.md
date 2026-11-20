@@ -125,7 +125,7 @@ erDiagram
         int cancelado_por FK
         datetime cancelado_em
         text motivo_cancelamento
-        datetime created_at "UTC"
+        datetime created_at "horário de São Paulo"
     }
 
     itens_venda {
@@ -332,7 +332,8 @@ erDiagram
 
   O banco não garante a integridade dessas referências, só a aplicação.
 - **Soft delete** (`deleted_at`): `usuarios`, `clientes`, `fornecedores`, `produtos`.
-- **Datas** são gravadas em UTC sem fuso (`datetime.utcnow()`). Os relatórios convertem para `America/Sao_Paulo`.
+- **Datas** são gravadas no horário de São Paulo, sem fuso (`agora()` em `app/utils/tempo.py`; fuso em `REPORT_TIMEZONE`).
+  Registros anteriores a essa mudança estão em UTC (3h adiantados) e não foram convertidos.
 - **`pagamentos.nsu`** guarda hoje o nome da maquineta, não o NSU da transação.
 - **`configuracoes_empresa`** é uma tabela de linha única, sem relacionamentos.
 - **Únicos compostos:** `categorias (nome, parent_id)`, `lancamentos_bancarios (conta_bancaria_id, fitid)`,

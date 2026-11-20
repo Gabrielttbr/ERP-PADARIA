@@ -14,7 +14,7 @@ from app.schemas.produto import (
     FornecedorCreate, FornecedorRead,
 )
 from app.services.produto_excel_service import gerar_excel_produtos, importar_excel_produtos
-from datetime import datetime
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -112,7 +112,7 @@ async def criar_produto(
 ):
     await _check_duplicados(db, payload.codigo_barras, payload.sku)
 
-    now = datetime.utcnow()
+    now = agora()
     produto = Produto(**payload.model_dump(), created_at=now, updated_at=now)
     db.add(produto)
     await db.flush()
@@ -140,7 +140,7 @@ async def atualizar_produto(
 
     for field, value in data.items():
         setattr(produto, field, value)
-    produto.updated_at = datetime.utcnow()
+    produto.updated_at = agora()
 
     await db.flush()
     await db.refresh(produto)
@@ -158,7 +158,7 @@ async def deletar_produto(
     if not produto:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     produto.ativo = False
-    produto.deleted_at = datetime.utcnow()
+    produto.deleted_at = agora()
     await db.flush()
 
 
@@ -171,7 +171,7 @@ async def exportar_excel(
     current_user: Usuario = Depends(require_estoque),
 ):
     conteudo = await gerar_excel_produtos(db, apenas_ativos)
-    nome_arquivo = f"produtos_{datetime.utcnow():%Y-%m-%d}.xlsx"
+    nome_arquivo = f"produtos_{agora():%Y-%m-%d}.xlsx"
     return Response(
         content=conteudo,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -216,7 +216,7 @@ async def criar_categoria(
     db: AsyncSession = Depends(get_db),
     current_user: Usuario = Depends(require_estoque),
 ):
-    now = datetime.utcnow()
+    now = agora()
     cat = Categoria(nome=payload.nome, descricao=payload.descricao, created_at=now, updated_at=now)
     db.add(cat)
     await db.flush()
@@ -238,7 +238,7 @@ async def criar_fornecedor(
     db: AsyncSession = Depends(get_db),
     current_user: Usuario = Depends(require_estoque),
 ):
-    now = datetime.utcnow()
+    now = agora()
     forn = Fornecedor(**payload.model_dump(), ativo=True, created_at=now, updated_at=now)
     db.add(forn)
     await db.flush()

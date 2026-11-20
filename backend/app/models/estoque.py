@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy import BigInteger, Integer, Text, Numeric, DateTime, Enum as SAEnum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.database import Base
+from app.utils.tempo import agora
 
 
 class MovimentacaoEstoque(Base):
@@ -26,7 +27,7 @@ class MovimentacaoEstoque(Base):
     )
     usuario_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("usuarios.id"), nullable=False)
     observacao: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=agora)
 
     # Relationships
     produto: Mapped["Produto"] = relationship(back_populates="movimentacoes")  # noqa: F821

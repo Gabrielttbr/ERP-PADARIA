@@ -65,3 +65,32 @@ async def test_alertas_estoque_flag_e_urgencia(db):
     por_id = {al.produto_id: al for al in alertas}
     assert por_id[a.id].urgente is True
     assert por_id[b.id].urgente is False
+
+
+async def test_venda_grava_horario_de_sao_paulo(db):
+    from datetime import timedelta
+    from app.utils.tempo import agora
+
+    u = await criar_usuario(db)
+    s = await criar_sessao(db, u.id)
+    p = await criar_produto(db, preco_venda="10.00", estoque="10")
+    venda = await _vender(db, s.id, u.id, p.id, "1", "10.00")
+
+    # O recibo imprime created_at direto: tem que ser a hora local, não UTC.
+    assert abs(venda.created_at - agora()) < timedelta(seconds=5)
+
+
+async def test_venda_das_22h30_fica_no_dia_certo_do_grafico(db):
+    from datetime import datetime, date
+    from app.services.dashboard_service import vendas_por_dia
+
+    u = await criar_usuario(db)
+    s = await criar_sessao(db, u.id)
+    p = await criar_produto(db, preco_venda="10.00", estoque="10")
+    venda = await _vender(db, s.id, u.id, p.id, "1", "10.00")
+    venda.created_at = datetime(2026, 8, 1, 22, 30)  # 22:30 em SP
+    await db.flush()
+
+    dias = await vendas_por_dia(date(2026, 8, 1), date(2026, 8, 2), db)
+
+    assert [(d.data, d.total_vendas) for d in dias] == [("2026-08-01", Decimal("10.00"))]

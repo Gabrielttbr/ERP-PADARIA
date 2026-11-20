@@ -212,7 +212,7 @@ export default function EstoquePage() {
       }))
       const link = document.createElement('a')
       link.href = url
-      link.download = `produtos_${new Date().toISOString().slice(0, 10)}.xlsx`
+      link.download = `produtos_${new Date().toLocaleDateString('sv-SE')}.xlsx`
       link.click()
       URL.revokeObjectURL(url)
     } catch {

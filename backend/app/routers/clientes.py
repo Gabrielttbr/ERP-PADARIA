@@ -12,6 +12,7 @@ from app.dependencies.auth import get_current_user, require_admin
 from app.models.usuario import Usuario
 from app.models.cliente import Cliente
 from app.models.venda import Venda
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -101,7 +102,7 @@ async def criar_cliente(
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=409, detail="CPF já cadastrado")
 
-    now = datetime.utcnow()
+    now = agora()
     cliente = Cliente(
         nome=payload.nome,
         telefone=payload.telefone,
@@ -156,7 +157,7 @@ async def atualizar_cliente(
     cliente.email = payload.email
     cliente.cpf = payload.cpf or None
     cliente.observacao = payload.observacao
-    cliente.updated_at = datetime.utcnow()
+    cliente.updated_at = agora()
 
     if payload.data_nascimento:
         from datetime import date
@@ -189,7 +190,7 @@ async def excluir_cliente(
     cliente = result.scalar_one_or_none()
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
-    cliente.deleted_at = datetime.utcnow()
+    cliente.deleted_at = agora()
     await db.commit()
 
 
@@ -244,6 +245,6 @@ async def ajustar_pontos(
     cliente.pontos_fidelidade = (cliente.pontos_fidelidade + payload.pontos).quantize(Decimal("0.01"))
     if cliente.pontos_fidelidade < 0:
         cliente.pontos_fidelidade = Decimal("0.00")
-    cliente.updated_at = datetime.utcnow()
+    cliente.updated_at = agora()
     await db.commit()
     return {"pontos_fidelidade": cliente.pontos_fidelidade}

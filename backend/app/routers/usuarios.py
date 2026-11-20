@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -10,6 +9,7 @@ from app.database import get_db
 from app.dependencies.auth import require_admin
 from app.models.usuario import Usuario
 from app.utils.security import hash_password
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -58,7 +58,7 @@ async def criar(
     db: AsyncSession = Depends(get_db),
     current_user: Usuario = Depends(require_admin),
 ):
-    now = datetime.utcnow()
+    now = agora()
     usuario = Usuario(
         uuid=str(uuid.uuid4()),
         nome=payload.nome,
@@ -93,7 +93,7 @@ async def atualizar(
         setattr(usuario, field, value)
     if payload.nova_senha:
         usuario.senha_hash = hash_password(payload.nova_senha)
-    usuario.updated_at = datetime.utcnow()
+    usuario.updated_at = agora()
     await db.commit()
     await db.refresh(usuario)
     return usuario
@@ -113,6 +113,6 @@ async def remover(
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     if usuario.perfil == "super_admin":
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    usuario.deleted_at = datetime.utcnow()
-    usuario.updated_at = datetime.utcnow()
+    usuario.deleted_at = agora()
+    usuario.updated_at = agora()
     await db.commit()

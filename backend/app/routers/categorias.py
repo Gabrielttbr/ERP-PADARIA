@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +7,7 @@ from app.dependencies.auth import get_current_user, require_estoque
 from app.models.usuario import Usuario
 from app.models.produto import Categoria
 from app.schemas.produto import CategoriaCreate, CategoriaRead, CategoriaUpdate
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ async def listar(db: AsyncSession = Depends(get_db), current_user: Usuario = Dep
 @router.post("", response_model=CategoriaRead, status_code=201)
 async def criar(payload: CategoriaCreate, db: AsyncSession = Depends(get_db), current_user: Usuario = Depends(require_estoque)):
     await _validar_parent(db, None, payload.parent_id)
-    now = datetime.utcnow()
+    now = agora()
     cat = Categoria(
         nome=payload.nome,
         descricao=payload.descricao,
@@ -74,7 +74,7 @@ async def atualizar(
         await _validar_parent(db, categoria_id, payload.parent_id)
         cat.parent_id = payload.parent_id
 
-    cat.updated_at = datetime.utcnow()
+    cat.updated_at = agora()
     await db.commit()
     await db.refresh(cat)
     return cat
@@ -94,5 +94,5 @@ async def deletar(categoria_id: int, db: AsyncSession = Depends(get_db), current
         raise HTTPException(status_code=400, detail="Remova ou mova as subcategorias antes de excluir esta")
 
     cat.ativo = False
-    cat.updated_at = datetime.utcnow()
+    cat.updated_at = agora()
     await db.commit()

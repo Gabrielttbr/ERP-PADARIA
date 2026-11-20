@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 
@@ -18,6 +17,7 @@ from app.schemas.caixa import (
     ResumoFechamentoCaixa,
     SessaoCaixaRead,
 )
+from app.utils.tempo import agora
 
 TWO = Decimal("0.01")
 FORMAS_PAGAMENTO = ("dinheiro", "pix", "cartao_credito", "cartao_debito", "vale")
@@ -46,7 +46,7 @@ async def abrir_caixa(
     if not caixa:
         raise HTTPException(status_code=404, detail="Caixa não encontrado")
 
-    now = datetime.utcnow()
+    now = agora()
     sessao = SessaoCaixa(
         caixa_id=payload.caixa_id,
         usuario_id=usuario_id,
@@ -83,7 +83,7 @@ async def fechar_caixa(
         raise HTTPException(status_code=404, detail="Sessão aberta não encontrada")
 
     totais          = await _totalizar_formas_pagamento(sessao_id, db)
-    now             = datetime.utcnow()
+    now             = agora()
     valor_fechamento = _D(payload.valor_fechamento)
     saldo_esperado  = dinheiro_esperado_na_gaveta(sessao, totais)
     diferenca       = _D(valor_fechamento - saldo_esperado)
@@ -226,7 +226,7 @@ async def _registrar_movimentacao(
         valor=valor_q,
         motivo=motivo,
         usuario_id=usuario_id,
-        created_at=datetime.utcnow(),
+        created_at=agora(),
     )
     db.add(mov)
     await db.flush()

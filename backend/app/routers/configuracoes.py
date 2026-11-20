@@ -1,7 +1,6 @@
 import io
 import os
 import uuid
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -16,6 +15,7 @@ from app.dependencies.auth import get_current_user, require_admin
 from app.models.configuracao import ConfiguracaoEmpresa
 from app.models.usuario import Usuario
 from app.services import email_service
+from app.utils.tempo import agora
 
 router = APIRouter()
 settings = get_settings()
@@ -75,7 +75,7 @@ async def _get_or_create_empresa(db: AsyncSession) -> ConfiguracaoEmpresa:
     result = await db.execute(select(ConfiguracaoEmpresa).where(ConfiguracaoEmpresa.id == 1))
     config = result.scalar_one_or_none()
     if not config:
-        now = datetime.utcnow()
+        now = agora()
         config = ConfiguracaoEmpresa(
             id=1,
             nome=settings.padaria_nome,
@@ -111,7 +111,7 @@ async def update_empresa(
     config = await _get_or_create_empresa(db)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(config, field, value)
-    config.updated_at = datetime.utcnow()
+    config.updated_at = agora()
     await db.flush()
     return config
 
@@ -164,7 +164,7 @@ async def upload_logo(
                 pass
 
     config.logo_url = f"/uploads/{filename}"
-    config.updated_at = datetime.utcnow()
+    config.updated_at = agora()
     await db.flush()
     return config
 
@@ -204,7 +204,7 @@ async def update_smtp(
         if field == "smtp_senha" and not value:
             continue
         setattr(config, field, value)
-    config.updated_at = datetime.utcnow()
+    config.updated_at = agora()
     await db.flush()
     return _smtp_read(config)
 

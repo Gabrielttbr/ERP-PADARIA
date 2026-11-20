@@ -1,7 +1,7 @@
 """Financeiro: importação de extrato OFX (com dedupe), sugestão e conciliação
 manual de lançamentos, e cadastro de operadoras/taxas de cartão."""
 
-from datetime import datetime
+from app.utils.tempo import agora
 from decimal import Decimal
 from io import BytesIO
 
@@ -72,7 +72,7 @@ async def test_sugestao_casa_pix_por_valor_e_data(db):
     await criar_venda(venda_payload, u.id, db)
 
     # OFX com a data de hoje (a venda acabou de ser criada "agora" pelo teste).
-    hoje = datetime.utcnow().strftime("%Y%m%d")
+    hoje = agora().strftime("%Y%m%d")
     ofx_hoje = _OFX.replace("20260705120000", f"{hoje}120000")
 
     conta = await criar_conta(ContaBancariaCreate(banco="Banco Teste", conta="1234-5"), db, u)

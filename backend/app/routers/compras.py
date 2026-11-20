@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
@@ -17,6 +16,7 @@ from app.models.estoque import MovimentacaoEstoque
 from app.schemas.produto import ProdutoCreate
 from app.routers.produtos import criar_produto
 from app.services.nfe_xml_service import parse_nfe_xml, NFeInvalidaError
+from app.utils.tempo import agora
 
 _TAMANHO_MAXIMO_XML = 5 * 1024 * 1024  # 5 MB — XML de NF-e real nunca chega perto disso
 
@@ -105,7 +105,7 @@ async def criar_compra(
     db: AsyncSession = Depends(get_db),
     current_user: Usuario = Depends(require_estoque),
 ):
-    now = datetime.utcnow()
+    now = agora()
     total = sum(i.quantidade * i.custo_unit for i in payload.itens)
 
     compra = Compra(
@@ -152,7 +152,7 @@ async def receber_compra(
     itens_result = await db.execute(select(ItemCompra).where(ItemCompra.compra_id == compra_id))
     itens = itens_result.scalars().all()
 
-    now = datetime.utcnow()
+    now = agora()
     for item in itens:
         prod_result = await db.execute(
             select(Produto).where(Produto.id == item.produto_id)
@@ -325,7 +325,7 @@ async def confirmar_importacao_xml(
             )
         fornecedor = await _buscar_fornecedor_por_cnpj(db, payload.fornecedor_cnpj)
         if fornecedor is None:
-            now = datetime.utcnow()
+            now = agora()
             fornecedor = Fornecedor(
                 razao_social=payload.fornecedor_nome, cnpj=payload.fornecedor_cnpj,
                 ativo=True, created_at=now, updated_at=now,

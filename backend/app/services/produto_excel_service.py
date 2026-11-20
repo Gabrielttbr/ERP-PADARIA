@@ -9,7 +9,6 @@ pra não furar o rastro de auditoria que o resto do sistema mantém.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from typing import Optional
@@ -18,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.produto import Produto, Categoria, Fornecedor
+from app.utils.tempo import agora
 
 COLUNAS = [
     "id", "codigo_barras", "sku", "nome", "fabricante", "descricao",
@@ -125,7 +125,7 @@ async def importar_excel_produtos(
     forns = {f.razao_social.strip().lower(): f for f in (await db.execute(select(Fornecedor))).scalars().all()}
 
     resumo = ResumoImportacao()
-    now = datetime.utcnow()
+    now = agora()
 
     linhas = list(ws.iter_rows(min_row=2, values_only=True))
     for idx, linha in enumerate(linhas, start=2):

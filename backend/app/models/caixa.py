@@ -8,6 +8,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.database import Base
 from app.models.base import TimestampMixin
+from app.utils.tempo import agora
 
 
 class Caixa(Base, TimestampMixin):
@@ -39,7 +40,7 @@ class SessaoCaixa(Base):
     total_suprimentos: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0.00"))
     diferenca: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
     observacao: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    opened_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    opened_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=agora)
     closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Relationships
@@ -61,7 +62,7 @@ class MovimentacaoCaixa(Base):
     valor: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     motivo: Mapped[str] = mapped_column(String(255), nullable=False)
     usuario_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("usuarios.id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=agora)
 
     # Relationships
     sessao: Mapped["SessaoCaixa"] = relationship(back_populates="movimentacoes")

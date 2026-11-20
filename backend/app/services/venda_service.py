@@ -1,4 +1,3 @@
-from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 import uuid
@@ -15,6 +14,7 @@ from app.models.estoque import MovimentacaoEstoque
 from app.models.auditoria import LogAuditoria
 from app.models.caixa import SessaoCaixa
 from app.schemas.venda import VendaCreate
+from app.utils.tempo import agora
 
 settings = get_settings()
 
@@ -110,7 +110,7 @@ async def criar_venda(
     valores_aplicados = _aplicar_troco(payload.pagamentos, troco)
 
     # ── 6. Cria Venda ────────────────────────────────────────────────────
-    now = datetime.utcnow()
+    now = agora()
     venda = Venda(
         uuid=str(uuid.uuid4()),
         sessao_id=payload.sessao_id,
@@ -227,7 +227,7 @@ async def cancelar_venda(
     if venda.status != "concluida":
         raise HTTPException(status_code=422, detail=f"Venda com status '{venda.status}' não pode ser cancelada")
 
-    now = datetime.utcnow()
+    now = agora()
     venda.status = "cancelada"
     venda.cancelado_por = usuario_id
     venda.cancelado_em = now

@@ -1,5 +1,4 @@
 from typing import Optional
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +10,7 @@ from app.dependencies.auth import get_current_user, require_estoque
 from app.models.usuario import Usuario
 from app.models.produto import Produto
 from app.models.estoque import MovimentacaoEstoque
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -76,7 +76,7 @@ async def ajuste_estoque(
     else:
         saldo_depois = saldo_antes + payload.quantidade
 
-    now = datetime.utcnow()
+    now = agora()
     produto.estoque_atual = saldo_depois
     produto.updated_at = now
 

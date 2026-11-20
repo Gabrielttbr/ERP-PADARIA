@@ -7,6 +7,7 @@ from app.models.usuario import Usuario
 from app.models.auditoria import LogAuditoria
 from app.schemas.auth import LoginRequest, TokenResponse, RefreshRequest
 from app.utils.security import verify_password, create_access_token, create_refresh_token, decode_token
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -40,7 +41,7 @@ async def login(
         acao="login",
         ip_address=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
-        created_at=datetime.utcnow(),
+        created_at=agora(),
     ))
     await db.commit()
 

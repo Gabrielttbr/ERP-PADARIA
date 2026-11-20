@@ -3,6 +3,7 @@ from typing import Optional, Any
 from sqlalchemy import BigInteger, Integer, String, JSON, DateTime, Enum as SAEnum, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 from app.database import Base
+from app.utils.tempo import agora
 
 
 class LogAuditoria(Base):
@@ -20,4 +21,4 @@ class LogAuditoria(Base):
     dados_novos: Mapped[Optional[Any]] = mapped_column(JSON, nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=agora)

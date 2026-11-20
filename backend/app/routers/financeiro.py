@@ -12,6 +12,7 @@ from app.models.usuario import Usuario
 from app.models.venda import Pagamento
 from app.models.financeiro import ContaBancaria, LancamentoBancario, OperadoraCartao, TaxaCartao
 from app.services.ofx_service import parse_ofx, OfxInvalidoError
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -251,7 +252,7 @@ async def conciliar_lancamento(
     lanc.conciliado = True
     lanc.conciliado_tipo = payload.tipo
     lanc.conciliado_ref_id = payload.ref_id
-    lanc.conciliado_em = datetime.utcnow()
+    lanc.conciliado_em = agora()
     lanc.conciliado_por = current_user.id
     await db.flush()
     return {"mensagem": "Lançamento conciliado"}

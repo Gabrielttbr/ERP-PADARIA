@@ -14,6 +14,7 @@ from app.models.venda import Venda
 from app.models.caixa import SessaoCaixa, Caixa
 from app.models.usuario import Usuario
 from app.config import get_settings
+from app.utils.tempo import agora
 
 settings = get_settings()
 
@@ -115,7 +116,7 @@ async def gerar_pdf_vendas(
     ]))
     story.append(t)
     story.append(Spacer(1, 0.5*cm))
-    story.append(Paragraph(f"Total de vendas: {len(vendas)} | Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}", styles["Normal"]))
+    story.append(Paragraph(f"Total de vendas: {len(vendas)} | Gerado em: {agora().strftime('%d/%m/%Y %H:%M')}", styles["Normal"]))
 
     doc.build(story)
     return buf.getvalue()

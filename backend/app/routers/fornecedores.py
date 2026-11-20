@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +7,7 @@ from app.dependencies.auth import get_current_user, require_estoque
 from app.models.usuario import Usuario
 from app.models.produto import Fornecedor
 from app.schemas.produto import FornecedorCreate, FornecedorRead
+from app.utils.tempo import agora
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def listar(db: AsyncSession = Depends(get_db), current_user: Usuario = Dep
 
 @router.post("", response_model=FornecedorRead, status_code=201)
 async def criar(payload: FornecedorCreate, db: AsyncSession = Depends(get_db), current_user: Usuario = Depends(require_estoque)):
-    now = datetime.utcnow()
+    now = agora()
     f = Fornecedor(**payload.model_dump(), ativo=True, created_at=now, updated_at=now)
     db.add(f)
     await db.commit()
@@ -36,7 +36,7 @@ async def atualizar(forn_id: int, payload: FornecedorCreate, db: AsyncSession = 
         raise HTTPException(status_code=404, detail="Fornecedor não encontrado")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(f, k, v)
-    f.updated_at = datetime.utcnow()
+    f.updated_at = agora()
     await db.commit()
     await db.refresh(f)
     return f

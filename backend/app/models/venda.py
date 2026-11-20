@@ -8,6 +8,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from app.database import Base
 from app.models.base import TimestampMixin
+from app.utils.tempo import agora
 
 
 class Venda(Base, TimestampMixin):
@@ -88,7 +89,7 @@ class Pagamento(Base):
         SAEnum("visa", "master", "elo", "amex", "hipercard", "outra", native_enum=False), nullable=True
     )
     parcelas: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=agora)
 
     operadora: Mapped[Optional["OperadoraCartao"]] = relationship()  # noqa: F821
 
