@@ -67,3 +67,9 @@ CONFIGURAR_LOGO.bat
 configurar_logo.py
 ATUALIZAR_ATALHO.bat
 COMPILAR_FRONTEND.bat
+
+# Testes E2E (Playwright)
+frontend/e2e/.auth/
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
