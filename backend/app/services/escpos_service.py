@@ -4,6 +4,7 @@ Sem dependência de biblioteca externa neste módulo; apenas bytes puros.
 Compatível com impressoras 80mm (42 colunas) e 58mm (32 colunas).
 """
 
+import textwrap
 from datetime import datetime
 from decimal import Decimal
 from dataclasses import dataclass
@@ -88,14 +89,23 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
         return f"{qtd:g} {unit}"
 
     def item_line(nome: str, qtd: Decimal, unit: str, preco: Decimal, total: Decimal) -> bytes:
-        # Ex: "Pão Francês         2 un  R$ 0,60   R$ 1,20"
-        # Ex: "Cebola           0,200 kg  R$ 5,90   R$ 1,18"
-        qtd_str = fmt_qtd(qtd, unit)
-        preco_str = fmt_brl(preco)
+        # Duas linhas por item, para caber em 58mm e 80mm sem cortar valores:
+        #   Pão Francês
+        #     2 un x R$ 0,60                   R$ 1,20
+        #   Cebola
+        #     0,200 kg x R$ 5,90               R$ 1,18
+        out = b""
+        for parte in textwrap.wrap(nome, cols) or [""]:
+            out += ALIGN_LEFT + enc_line(parte)
+        detalhe = f"  {fmt_qtd(qtd, unit)} x {fmt_brl(preco)}"
         total_str = fmt_brl(total)
-        nome_truncated = nome[:int(cols * 0.45)]
-        line = f"{nome_truncated:<{int(cols*0.45)}} {qtd_str:>10} {preco_str:>9} {total_str:>9}"
-        return ALIGN_LEFT + enc_line(line[:cols])
+        if len(detalhe) + 1 + len(total_str) <= cols:
+            out += ALIGN_LEFT + enc_line(f"{detalhe:<{cols - len(total_str)}}{total_str}")
+        else:
+            # Valores grandes (comum em 58mm): total vai numa linha própria
+            out += ALIGN_LEFT + enc_line(detalhe[:cols])
+            out += ALIGN_RIGHT + enc_line(total_str)
+        return out
 
     def totals_line(label: str, value: str) -> bytes:
         line = f"{label:<{cols - len(value) - 1}}{value}"
@@ -124,8 +134,8 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
     buf += sep()
 
     # Cabeçalho de itens
-    header = f"{'ITEM':<{int(cols*0.45)}} {'QTD':>8} {'UNIT':>9} {'TOTAL':>9}"
-    buf += BOLD_ON + ALIGN_LEFT + enc_line(header[:cols]) + BOLD_OFF
+    header = f"{'ITEM / QTD x UNIT':<{cols - 5}}TOTAL"
+    buf += BOLD_ON + ALIGN_LEFT + enc_line(header) + BOLD_OFF
     buf += sep()
 
     # Itens
