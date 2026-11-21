@@ -221,13 +221,18 @@ Write-Step "Preparando $INSTALL_DIR..."
 if (Test-Path (Join-Path $INSTALL_DIR ".git")) {
     Write-Warn "Repositorio ja existe - atualizando..."
     Set-Location $INSTALL_DIR
+    # O Iniciar_Padaria.bat e gerado por este instalador (passo 9) por cima do
+    # arquivo do repositorio: devolve o original pro git nao recusar o pull.
+    & $GIT checkout -- Iniciar_Padaria.bat
     & $GIT pull --ff-only
+    if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao atualizar o codigo (git pull). Verifique a internet e arquivos alterados em $INSTALL_DIR."; exit 1 }
 } else {
     if (Test-Path $INSTALL_DIR) {
         Write-Warn "Pasta existe sem git - removendo para clonar limpo..."
         Remove-Item $INSTALL_DIR -Recurse -Force
     }
     & $GIT clone $REPO_URL $INSTALL_DIR
+    if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao baixar o codigo (git clone $REPO_URL)."; exit 1 }
     Set-Location $INSTALL_DIR
 }
 Write-OK "Codigo em $INSTALL_DIR"
