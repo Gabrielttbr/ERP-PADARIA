@@ -2,7 +2,7 @@
 setlocal
 
 :: ============================================================================
-::  ERP PADARIA - ATUALIZADOR (Windows / SQLite)
+::  SISTEMA PDV - ATUALIZADOR (Windows / SQLite)
 ::  1. para o servidor   2. backup do banco   3. baixa a versao nova (git)
 ::  4. dependencias e build   5. reinicia.  Para em qualquer erro.
 :: ============================================================================
@@ -28,10 +28,10 @@ if errorlevel 1 (
 
 :inicio
 
-title ATUALIZAR - ERP Padaria
+title ATUALIZAR - Sistema PDV
 echo.
 echo  ============================================================
-echo       ERP PADARIA - ATUALIZADOR
+echo       SISTEMA PDV - ATUALIZADOR
 echo  O banco de dados NAO e apagado: antes de atualizar, e feito
 echo  um backup em %BACKUP_DIR%
 echo.
@@ -68,7 +68,7 @@ call :parar_servidor
 timeout /t 2 /nobreak >nul
 netstat -aon 2>nul | findstr ":8000 " | findstr "LISTENING" >nul
 if not errorlevel 1 (
-    set "MOTIVO=O servidor continua rodando na porta 8000. Feche o Padaria ERP e tente de novo."
+    set "MOTIVO=O servidor continua rodando na porta 8000. Feche o Sistema PDV e tente de novo."
     goto falha
 )
 echo  [OK] Servidor parado.
@@ -160,7 +160,7 @@ echo  [OK] Interface compilada.
 :: --- 5. Reinicia ---
 echo.
 echo  [5/5] Iniciando o sistema...
-start "ERP Padaria" cmd /k ""%INICIAR%""
+start "Sistema PDV" cmd /k ""%INICIAR%""
 
 echo.
 echo  ============================================================
@@ -191,7 +191,7 @@ if "%ETAPA%"=="build" (
     echo   para a versao anterior:  cd /d %ROOT% ^&^& git reset --hard %VERSAO_ANTES%
     echo   e rode o ATUALIZAR_SISTEMA.bat outra vez.
 ) else (
-    echo   O sistema continua na versao anterior. Abra o Padaria ERP normalmente.
+    echo   O sistema continua na versao anterior. Abra o Sistema PDV normalmente.
 )
 echo.
 pause

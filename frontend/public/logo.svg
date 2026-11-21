@@ -13,8 +13,8 @@
   <!-- ── Wordmark ── -->
   <text x="398" y="232"
         font-family="Inter, Geist, sans-serif"
-        font-size="122" font-weight="700"
-        fill="#1A2E1A" letter-spacing="-4">Nexshell</text>
+        font-size="96" font-weight="700"
+        fill="#1A2E1A" letter-spacing="-4">GiroNegócios</text>
 
   <!-- ── Tagline ── -->
   <text x="402" y="280"

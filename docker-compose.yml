@@ -1,5 +1,5 @@
 # =============================================================================
-# ERP Padaria — stack multi-tenant (cópia isolada por cliente)
+# Sistema PDV — stack multi-tenant (cópia isolada por cliente)
 #
 # Cada cliente roda como um projeto compose separado, com banco/volumes/rede
 # próprios. Os valores vêm de um arquivo de ambiente por cliente.

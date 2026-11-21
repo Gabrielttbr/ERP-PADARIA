@@ -1,10 +1,10 @@
 @echo off
-title INSTALADOR - ERP PADARIA
+title INSTALADOR - SISTEMA PDV
 color 0B
 
 echo.
 echo  ============================================================
-echo       BEM-VINDO AO INSTALADOR DO ERP PADARIA
+echo       BEM-VINDO AO INSTALADOR DO SISTEMA PDV
 echo  ============================================================
 echo.
 echo  Este programa instalara o sistema automaticamente.

@@ -1,4 +1,4 @@
-# Contributing to ERP Padaria
+# Contributing to Sistema PDV
 
 Thank you for considering contributing! This document covers how to get started, our coding standards, and the pull request process.
 

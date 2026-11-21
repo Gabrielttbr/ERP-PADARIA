@@ -47,9 +47,9 @@ async def _limpar(db) -> None:
 async def _base(db) -> dict:
     await _limpar(db)
 
-    admin = Usuario(uuid=str(uuid.uuid4()), nome="Administrador", email="admin@padaria.com",
+    admin = Usuario(uuid=str(uuid.uuid4()), nome="Administrador", email="admin@gironegocios.com",
                     senha_hash=hash_password(SENHA), perfil="admin", ativo=True)
-    operador = Usuario(uuid=str(uuid.uuid4()), nome="Operador Caixa", email="caixa@padaria.com",
+    operador = Usuario(uuid=str(uuid.uuid4()), nome="Operador Caixa", email="caixa@gironegocios.com",
                        senha_hash=hash_password(SENHA), perfil="caixa", ativo=True)
     db.add_all([admin, operador])
 
@@ -129,7 +129,7 @@ async def _dia_d_e_ontem(db) -> None:
     await _dia_d(db)
     sessao = (await db.execute(SessaoCaixa.__table__.select())).first()
     cafe = (await db.execute(Produto.__table__.select().where(Produto.nome == "Café Expresso"))).first()
-    admin = (await db.execute(Usuario.__table__.select().where(Usuario.email == "admin@padaria.com"))).first()
+    admin = (await db.execute(Usuario.__table__.select().where(Usuario.email == "admin@gironegocios.com"))).first()
     venda = await venda_service.criar_venda(_venda(sessao.id, [(cafe, "2")], [("dinheiro", "10.00", None)]),
                                             admin.id, db)
     ontem = hoje_local() - timedelta(days=1)

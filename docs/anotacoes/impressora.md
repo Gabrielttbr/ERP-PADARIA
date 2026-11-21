@@ -111,7 +111,7 @@ PRINTER_PAPER_WIDTH=80
 
 Dados que saem no cabeçalho e rodapé do cupom:
 ```env
-PADARIA_NOME=Minha Padaria
+PADARIA_NOME=Minha Empresa
 PADARIA_CNPJ=00.000.000/0001-00
 PADARIA_ENDERECO=Rua Exemplo, 123
 PADARIA_CIDADE=Cidade - UF

@@ -683,7 +683,7 @@ export default function EstoquePage() {
                   value={form.nome}
                   onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
                   className="input"
-                  placeholder="Ex: Pão Francês"
+                  placeholder="Ex: Arroz 5kg"
                 />
               </div>
 

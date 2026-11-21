@@ -1,5 +1,5 @@
 #Requires -Version 5.1
-# Instalador automatico do ERP Padaria
+# Instalador automatico do Sistema PDV
 # Execute como Administrador: botao direito -> Executar como administrador
 
 Set-StrictMode -Off
@@ -99,7 +99,7 @@ if (-not $isAdmin) {
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "     INSTALADOR AUTOMATICO - ERP PADARIA"                    -ForegroundColor Cyan
+Write-Host "     INSTALADOR AUTOMATICO - SISTEMA PDV"                    -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Destino : $INSTALL_DIR"
@@ -252,7 +252,7 @@ Write-Step "Configurando .env..."
 if (-not (Test-Path $envPath)) {
     $jwt = [System.Guid]::NewGuid().ToString("N") + [System.Guid]::NewGuid().ToString("N")
     $envLines = @(
-        "APP_NAME=ERP Padaria",
+        "APP_NAME=Sistema PDV",
         "APP_ENV=production",
         "APP_DEBUG=false",
         "APP_HOST=0.0.0.0",
@@ -264,7 +264,7 @@ if (-not (Test-Path $envPath)) {
         "JWT_REFRESH_TOKEN_EXPIRE_DAYS=7",
         "CORS_ORIGINS=http://localhost:8000,http://127.0.0.1:8000",
         "PRINTER_TYPE=file",
-        "PADARIA_NOME=Minha Padaria",
+        "PADARIA_NOME=Minha Empresa",
         "PADARIA_CNPJ=00.000.000/0001-00",
         "PADARIA_MENSAGEM_RODAPE=Obrigado pela preferencia!"
     )
@@ -324,14 +324,14 @@ $startBat   = Join-Path $INSTALL_DIR "Iniciar_Padaria.bat"
 $venvPython2 = Join-Path $venvDir "Scripts\python.exe"
 $batLines = @(
     "@echo off",
-    "title ERP Padaria",
+    "title Sistema PDV",
     "color 0A",
     ("cd /d """ + $backendDir + """"),
     ("set PYTHONPATH=" + $backendDir),
     ("if not exist """ + (Join-Path $backendDir "uploads") + """ mkdir """ + (Join-Path $backendDir "uploads") + """"),
     "echo.",
     "echo  ============================================",
-    "echo       ERP PADARIA - Iniciando...",
+    "echo       SISTEMA PDV - Iniciando...",
     "echo  ============================================",
     "echo.",
     "echo  Acesse: http://localhost:8000",
@@ -363,13 +363,18 @@ function New-Shortcut($lnkPath) {
     $sc.TargetPath       = "$env:SystemRoot\System32\cmd.exe"
     $sc.Arguments        = "/k `"$startBat`""
     $sc.WorkingDirectory = $backendDir
-    $sc.Description      = "Iniciar ERP Padaria"
+    $sc.Description      = "Iniciar Sistema PDV"
     $sc.WindowStyle      = 1
     $sc.IconLocation     = $iconPath
     $sc.Save()
 }
-New-Shortcut (Join-Path $desktopPublic "Padaria ERP.lnk")
-if ($desktopUser -ne $desktopPublic) { New-Shortcut (Join-Path $desktopUser "Padaria ERP.lnk") }
+# Remove o atalho com o nome antigo (instalacoes anteriores ao Sistema PDV)
+foreach ($d in @($desktopPublic, $desktopUser)) {
+    $antigo = Join-Path $d "Padaria ERP.lnk"
+    if (Test-Path $antigo) { Remove-Item $antigo -Force }
+}
+New-Shortcut (Join-Path $desktopPublic "Sistema PDV.lnk")
+if ($desktopUser -ne $desktopPublic) { New-Shortcut (Join-Path $desktopUser "Sistema PDV.lnk") }
 Write-OK "Atalho criado na area de trabalho"
 
 # ============================================================================
@@ -381,13 +386,13 @@ Write-Host "   INSTALACAO CONCLUIDA COM SUCESSO!"                         -Foreg
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Instalado em : $INSTALL_DIR"                               -ForegroundColor White
-Write-Host "  Atalho       : Area de trabalho > Padaria ERP"             -ForegroundColor White
+Write-Host "  Atalho       : Area de trabalho > Sistema PDV"             -ForegroundColor White
 Write-Host ""
 Write-Host "  Login inicial:"                                             -ForegroundColor White
-Write-Host "    Admin   : admin@padaria.com   / Admin@1234"              -ForegroundColor Gray
+Write-Host "    Admin   : admin@gironegocios.com   / Admin@1234"              -ForegroundColor Gray
 Write-Host "    (troque a senha no primeiro acesso e cadastre os demais usuarios)" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  Para iniciar clique em 'Padaria ERP' na area de trabalho"  -ForegroundColor Cyan
+Write-Host "  Para iniciar clique em 'Sistema PDV' na area de trabalho"  -ForegroundColor Cyan
 Write-Host ""
 
 $resp = Read-Host "Deseja iniciar o sistema agora? (S/N)"

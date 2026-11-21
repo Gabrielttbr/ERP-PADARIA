@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Instalador do ERP Padaria (bare-metal) para Linux/macOS.
+# Instalador do Sistema PDV (bare-metal) para Linux/macOS.
 # Equivalente ao INSTALAR_SISTEMA.bat + setup.ps1 (Windows), mas instala na
 # própria pasta do repositório (sem C:\Padaria). Para o caminho universal com
 # Docker, veja o README: `docker compose up -d --build`.
@@ -7,7 +7,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
-echo "== Instalador ERP Padaria (Linux/macOS) =="
+echo "== Instalador Sistema PDV (Linux/macOS) =="
 
 command -v python3 >/dev/null 2>&1 || { echo "[ERRO] Python 3 não encontrado. Instale o Python 3.12+." >&2; exit 1; }
 command -v npm >/dev/null 2>&1 || { echo "[ERRO] Node.js/npm não encontrado. Instale o Node 20+." >&2; exit 1; }

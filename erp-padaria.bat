@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title ERP Padaria - Desenvolvimento
+title Sistema PDV - Desenvolvimento
 color 0A
 setlocal EnableDelayedExpansion
 
@@ -9,7 +9,7 @@ if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 echo.
 echo  ==========================================
-echo       ERP PADARIA  -  Modo Dev
+echo       SISTEMA PDV  -  Modo Dev
 echo  ==========================================
 echo.
 

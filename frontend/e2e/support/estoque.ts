@@ -22,7 +22,7 @@ export class TelaEstoque {
   /** Preenche o formulário de produto (sem salvar). */
   async preencherProduto(p: NovoProduto) {
     await this.page.getByRole('button', { name: '+ Novo Produto' }).click()
-    await this.page.getByPlaceholder('Ex: Pão Francês').fill(p.nome)
+    await this.page.getByPlaceholder('Ex: Arroz 5kg').fill(p.nome)
     await this.page.getByTestId('produto-categoria').selectOption({ label: p.categoria })
     await digitarValor(this.page.getByTestId('produto-preco-venda'), p.venda)
     await digitarValor(this.page.getByTestId('produto-preco-custo'), p.custo)

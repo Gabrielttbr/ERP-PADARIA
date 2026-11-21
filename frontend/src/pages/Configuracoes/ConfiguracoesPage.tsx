@@ -147,7 +147,7 @@ function TabEmpresa() {
 
       <SectionCard title="Dados da empresa">
         <Field label="Nome da empresa *">
-          <input className="input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Padaria Exemplo" />
+          <input className="input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Minha Empresa" />
         </Field>
         <div className="grid grid-cols-2 gap-4">
           <Field label="CNPJ">
@@ -158,7 +158,7 @@ function TabEmpresa() {
           </Field>
         </div>
         <Field label="E-mail">
-          <input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="contato@padaria.com" />
+          <input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="contato@gironegocios.com" />
         </Field>
         <Field label="Endereço">
           <input className="input" value={form.endereco} onChange={e => setForm({ ...form, endereco: e.target.value })} placeholder="Rua das Flores, 123" />
@@ -215,7 +215,7 @@ function UsuarioModal({ usuario, onClose, onSaved }: { usuario: Usuario | null; 
           <input className="input" value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="João da Silva" required />
         </Field>
         <Field label="E-mail *">
-          <input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="joao@padaria.com" required />
+          <input className="input" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="joao@gironegocios.com" required />
         </Field>
         <Field label={isNew ? 'Senha *' : 'Nova senha (deixe em branco para manter)'}>
           <input className="input" type="password" value={form.senha} onChange={e => setForm({ ...form, senha: e.target.value })} placeholder={isNew ? 'Mínimo 6 caracteres' : '••••••••'} required={isNew} />
@@ -489,7 +489,7 @@ function TabSmtp() {
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Usuário (e-mail de login)">
-            <input className="input" value={form.smtp_user} onChange={e => setForm({ ...form, smtp_user: e.target.value })} placeholder="sistema@padaria.com" />
+            <input className="input" value={form.smtp_user} onChange={e => setForm({ ...form, smtp_user: e.target.value })} placeholder="sistema@gironegocios.com" />
           </Field>
           <Field label={smtp?.smtp_configurado ? 'Senha (vazio = manter)' : 'Senha'}>
             <input className="input" type="password" value={form.smtp_senha} onChange={e => setForm({ ...form, smtp_senha: e.target.value })} placeholder={smtp?.smtp_configurado ? '••••••••' : 'Senha do e-mail'} />
@@ -497,7 +497,7 @@ function TabSmtp() {
         </div>
 
         <Field label="Remetente (From)">
-          <input className="input" value={form.smtp_from} onChange={e => setForm({ ...form, smtp_from: e.target.value })} placeholder="ERP Padaria <sistema@padaria.com>" />
+          <input className="input" value={form.smtp_from} onChange={e => setForm({ ...form, smtp_from: e.target.value })} placeholder="Sistema PDV <sistema@gironegocios.com>" />
         </Field>
 
         <div className="rounded-xl p-3 text-xs space-y-1" style={{ background: '#F3EDE3', border: '1px solid #E8DDD0', color: '#8A7A6A' }}>

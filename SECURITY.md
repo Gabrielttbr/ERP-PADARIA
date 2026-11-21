@@ -10,7 +10,7 @@
 
 **Please do not open a public issue for security vulnerabilities.**
 
-If you discover a security vulnerability in ERP Padaria, report it responsibly:
+If you discover a security vulnerability in Sistema PDV, report it responsibly:
 
 1. **Email**: Send details to `alexandre.basto444@gmail.com` with the subject `[SECURITY] ERP-PADARIA`.
 2. **Include**:
@@ -23,7 +23,7 @@ You will receive an acknowledgement within **48 hours** and a resolution timelin
 
 ## Security Design
 
-ERP Padaria follows security-by-default principles:
+Sistema PDV follows security-by-default principles:
 
 - **JWT Authentication** — short-lived access tokens (8h) + refresh tokens (7 days)
 - **Bcrypt password hashing** — cost factor ≥ 12

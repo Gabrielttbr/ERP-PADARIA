@@ -1,7 +1,7 @@
 # Simular a instalação na máquina do cliente (Windows)
 
 Roteiro para testar o instalador do Windows (`INSTALAR_SISTEMA.bat` → `setup.ps1`)
-como se fosse a primeira instalação numa padaria: Windows limpo, sem Python,
+como se fosse a primeira instalação num cliente: Windows limpo, sem Python,
 Node ou Git, e banco de dados vazio.
 
 > **Importante:** o instalador **não usa os arquivos da sua máquina**. Ele baixa o
@@ -94,29 +94,29 @@ EOF
    2. Verificando/instalando **Node.js 20**
    3. Verificando/instalando **Git**
    4. Clonando o fork em **`C:\Padaria`**
-   5. Criando o **`backend\.env`** (SQLite, JWT aleatório, `PADARIA_NOME=Minha Padaria`)
+   5. Criando o **`backend\.env`** (SQLite, JWT aleatório, `PADARIA_NOME=Minha Empresa`)
    6. Criando o venv e instalando as dependências Python
    7. **Criando o banco com o `init_db.py`** (admin, empresa, Caixa 01 e Diverso 999)
    8. `npm install` + `npm run build` do frontend
-   9. Criando o `Iniciar_Padaria.bat` e o atalho **Padaria ERP** na área de trabalho
+   9. Criando o `Iniciar_Padaria.bat` e o atalho **Sistema PDV** na área de trabalho
 5. No final deve aparecer:
 
    ```
    Login inicial:
-     Admin   : admin@padaria.com   / Admin@1234
+     Admin   : admin@gironegocios.com   / Admin@1234
    ```
 
 ✅ **Deu certo se:** terminou sem `[ERRO]`, existe `C:\Padaria` e o atalho
-**Padaria ERP** está na área de trabalho.
+**Sistema PDV** está na área de trabalho.
 
 ---
 
 ## 4. Primeiro acesso: o que conferir
 
-Dê dois cliques no atalho **Padaria ERP**. Uma janela preta sobe o servidor e, em
+Dê dois cliques no atalho **Sistema PDV**. Uma janela preta sobe o servidor e, em
 uns 12 segundos, o navegador abre em `http://localhost:8000`.
 
-Entre com `admin@padaria.com` / `Admin@1234` e vá marcando:
+Entre com `admin@gironegocios.com` / `Admin@1234` e vá marcando:
 
 ### Banco limpo
 
@@ -139,7 +139,7 @@ Entre com `admin@padaria.com` / `Admin@1234` e vá marcando:
 ### Configuração inicial do cliente
 
 - [ ] Troque a senha do admin.
-- [ ] Em **Configurações**, preencha nome, CNPJ, endereço e rodapé do cupom da padaria.
+- [ ] Em **Configurações**, preencha nome, CNPJ, endereço e rodapé do cupom da empresa.
 - [ ] Cadastre um usuário **caixa** e entre com ele: deve cair direto na tela do caixa.
 - [ ] Cadastre alguns produtos reais e faça vendas.
 
@@ -154,7 +154,7 @@ Faça isso **na mesma Sandbox**, sem fechar a janela.
    - Deve aparecer *"Repositorio ja existe - atualizando..."* (`git pull`).
    - Deve aparecer *".env ja existe - mantendo configuracoes atuais"*.
    - No passo do banco: *"-- já existem usuários"*, *"-- produto DIVERSO já existe"*.
-3. Abra o **Padaria ERP** de novo e confira:
+3. Abra o **Sistema PDV** de novo e confira:
    - [ ] Os produtos, vendas, usuários e configurações do passo 4 **continuam lá**.
    - [ ] A senha nova do admin continua valendo.
    - [ ] O Diverso continua com um só cadastro (não duplicou).
@@ -165,7 +165,7 @@ Faça isso **na mesma Sandbox**, sem fechar a janela.
 ### Diverso desativado volta sozinho
 
 - [ ] Em Estoque, desative/exclua o **DIVERSO**.
-- [ ] Feche a janela do servidor e abra o **Padaria ERP** de novo.
+- [ ] Feche a janela do servidor e abra o **Sistema PDV** de novo.
 - [ ] O DIVERSO volta ativo, porque o backend garante o produto 999 toda vez que inicia.
 
 ---
@@ -199,7 +199,7 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
 ### 6.2 Atualização normal
 
 1. No WSL, faça uma mudança visível (ex.: um texto numa tela), commit e push.
-2. Na Sandbox, **deixe o Padaria ERP aberto** (o atualizador tem que fechar sozinho)
+2. Na Sandbox, **deixe o Sistema PDV aberto** (o atualizador tem que fechar sozinho)
    e rode o **`ATUALIZAR_SISTEMA.bat`**.
 3. Confira na tela:
    - [ ] `Versao instalada:` mostra o commit atual.
@@ -212,7 +212,7 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
 4. No sistema:
    - [ ] A mudança aparece.
    - [ ] Vendas, produtos, usuários e configurações continuam lá.
-   - [ ] O atalho **Padaria ERP** continua funcionando (feche e abra de novo).
+   - [ ] O atalho **Sistema PDV** continua funcionando (feche e abra de novo).
 
 ### 6.3 Já está na versão mais recente
 - [ ] Rode o `ATUALIZAR_SISTEMA.bat` de novo sem fazer push: aparece
@@ -231,10 +231,10 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
   (o atualizador preserva o arquivo que o instalador gerou).
 
 ### 6.5 Restaurar um backup
-1. Feche o Padaria ERP.
+1. Feche o Sistema PDV.
 2. Copie o arquivo de `C:\Padaria\backups\` para `C:\Padaria\backend\padaria.db`
    (substituindo).
-3. Abra o Padaria ERP.
+3. Abra o Sistema PDV.
    - [ ] Os dados voltam a ser os do momento do backup.
 
 ### 6.6 Voltar para a versão anterior do sistema
@@ -265,7 +265,7 @@ Use uma VM se o seu Windows for Home ou se quiser testar reiniciar a máquina
 
 Na VM dá para testar também:
 
-- [ ] Reiniciar o Windows e abrir o **Padaria ERP**: o sistema sobe normalmente.
+- [ ] Reiniciar o Windows e abrir o **Sistema PDV**: o sistema sobe normalmente.
 - [ ] Um usuário do Windows **sem** privilégio de administrador consegue usar o atalho.
 
 ---
@@ -282,9 +282,9 @@ Na VM dá para testar também:
 | O navegador não abre / página não carrega      | Espere a janela preta mostrar `Uvicorn running on http://0.0.0.0:8000` e acesse `http://localhost:8000` na mão.    |
 | Porta 8000 ocupada                                | O `Iniciar_Padaria.bat` já mata o processo que estiver na porta. Se persistir, feche as outras janelas do servidor.  |
 | Atualizador: `O git pull falhou` | Sem internet, ou alguém alterou arquivos em `C:\Padaria`. Veja com `git status` e desfaça com `git checkout -- <arquivo>`. |
-| Atualizador: `O servidor continua rodando na porta 8000` | Feche todas as janelas do Padaria ERP e rode de novo. |
+| Atualizador: `O servidor continua rodando na porta 8000` | Feche todas as janelas do Sistema PDV e rode de novo. |
 | Atualizador parou no `[4/5]` | O código novo já foi baixado. Rode de novo; se persistir, volte a versão (6.6). |
-| O nome da padaria no cupom sai "Minha Padaria"    | É o padrão do `.env` criado pelo instalador. Ajuste em **Configurações** ou em `C:\Padaria\backend\.env`. |
+| O nome da empresa no cupom sai "Minha Empresa"    | É o padrão do `.env` criado pelo instalador. Ajuste em **Configurações** ou em `C:\Padaria\backend\.env`. |
 
 ---
 

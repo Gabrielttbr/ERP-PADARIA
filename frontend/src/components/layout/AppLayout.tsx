@@ -45,7 +45,7 @@ function TopBar() {
             <path d="M 114 46 L 174 46 L 208 194 L 178 194 L 144 56 L 114 76 Z" fill="#52B788"/>
           </svg>
         </div>
-        <span className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>Nexshell</span>
+        <span className="font-bold text-sm" style={{ color: 'var(--clr-text)' }}>GiroNegócios</span>
       </div>
 
       {/* Desktop: nome da página */}

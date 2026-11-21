@@ -156,7 +156,7 @@ export default function Sidebar({ onLogout }: { onLogout?: () => void }) {
           </div>
           <div className="min-w-0">
             <div className="font-bold text-sm leading-tight truncate" style={{ color: 'rgba(230,250,230,0.95)' }}>
-              {empresa?.nome ?? 'Nexshell'}
+              {empresa?.nome ?? 'GiroNegócios'}
             </div>
           </div>
         </div>

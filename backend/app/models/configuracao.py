@@ -10,7 +10,7 @@ class ConfiguracaoEmpresa(Base, TimestampMixin):
     __tablename__ = "configuracoes_empresa"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    nome: Mapped[str] = mapped_column(String(200), nullable=False, default="Padaria Exemplo")
+    nome: Mapped[str] = mapped_column(String(200), nullable=False, default="Minha Empresa")
     cnpj: Mapped[str | None] = mapped_column(String(20), nullable=True)
     telefone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     email: Mapped[str | None] = mapped_column(String(150), nullable=True)

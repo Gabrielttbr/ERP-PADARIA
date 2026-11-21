@@ -112,7 +112,7 @@ function SecVisaoGeral() {
     <section className="space-y-4">
       <SectionTitle id="visao-geral" icon="📋">Visão Geral do Sistema</SectionTitle>
       <p className="text-sm leading-relaxed" style={{ color: 'var(--clr-text)' }}>
-        O <strong>Nexshell</strong> é um sistema de gestão completo para padarias e confeitarias. Reúne frente de caixa (PDV), controle de estoque, relatórios gerenciais e auditoria em uma única plataforma web — acessível de qualquer dispositivo, sem instalação.
+        O <strong>GiroNegócios</strong> é um sistema de gestão completo para o comércio. Reúne frente de caixa (PDV), controle de estoque, relatórios gerenciais e auditoria em uma única plataforma web — acessível de qualquer dispositivo, sem instalação.
       </p>
       <FeatureGrid items={[
         { icon: '🖥️', title: 'Frente de Caixa',  desc: 'Realize vendas rapidamente com catálogo visual, leitura de código de barras e múltiplas formas de pagamento.' },
@@ -153,7 +153,7 @@ function SecPDV() {
 
       <SubTitle>Filtros de produto</SubTitle>
       <p className="text-sm leading-relaxed" style={{ color: 'var(--clr-text)' }}>
-        Use as <strong>pílulas de categoria</strong> abaixo da busca para filtrar rapidamente por tipo de produto (ex.: Pães, Bebidas, Salgados). Clique em "Tudo" para exibir todos os itens.
+        Use as <strong>pílulas de categoria</strong> abaixo da busca para filtrar rapidamente por tipo de produto (ex.: Bebidas, Mercearia, Limpeza). Clique em "Tudo" para exibir todos os itens.
       </p>
 
       <SubTitle>Formas de pagamento</SubTitle>
@@ -234,7 +234,7 @@ function SecEstoque() {
         { icon: '📁', title: 'Categoria',         desc: 'Classifica o produto para filtros no PDV e relatórios.' },
         { icon: '💵', title: 'Preço de Custo',    desc: 'Quanto o produto custa para o estabelecimento. Usado no cálculo de margem.' },
         { icon: '💰', title: 'Preço de Venda',    desc: 'Preço cobrado do cliente. Exibido no PDV.' },
-        { icon: '📏', title: 'Unidade de Medida', desc: '"un" para itens contáveis (pães, latas) ou "kg" para peso.' },
+        { icon: '📏', title: 'Unidade de Medida', desc: '"un" para itens contáveis (latas, pacotes) ou "kg" para peso.' },
         { icon: '📊', title: 'Estoque Atual',     desc: 'Quantidade em estoque no momento do cadastro.' },
         { icon: '⚠️', title: 'Estoque Mínimo',    desc: 'Limite abaixo do qual o sistema emite alerta. Se não houver limite, deixe 0.' },
       ]} />
@@ -533,7 +533,7 @@ export default function DocsPage() {
           <div>
             <h1 className="text-2xl font-black" style={{ color: 'var(--clr-text)' }}>Documentação do Sistema</h1>
             <p className="text-sm mt-1" style={{ color: 'var(--clr-text-muted)' }}>
-              Guia completo de uso do Nexshell — módulos, funcionalidades e fluxos de operação.
+              Guia completo de uso do GiroNegócios — módulos, funcionalidades e fluxos de operação.
             </p>
           </div>
 
