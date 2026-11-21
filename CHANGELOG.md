@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.5.0] — 2026-11-21
+
 ### Added
 - **Cadastro rápido de produtos no Estoque, só pelo teclado**: `F2` abre o
   cadastro com o cursor no código de barras; `Enter` passa para o próximo campo
