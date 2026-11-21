@@ -120,6 +120,11 @@ function StatusBadge({ atual, minimo }: { atual: number | string; minimo: number
   )
 }
 
+// Padrões do cadastro novo: estoque "infinito" (maior inteiro que cabe na coluna
+// Numeric(10,3) = 9.999.999,999) e custo simbólico de R$ 0,01.
+const ESTOQUE_INICIAL_PADRAO = '9999999'
+const CUSTO_PADRAO = 0.01
+
 const emptyForm = {
   nome: '',
   codigo_barras: '',
@@ -128,7 +133,7 @@ const emptyForm = {
   preco_venda: '',
   preco_custo: '',
   unidade_medida: 'un',
-  estoque_atual: '0',
+  estoque_atual: ESTOQUE_INICIAL_PADRAO,
   estoque_minimo: '0',
   descricao: '',
 }
@@ -203,6 +208,13 @@ export default function EstoquePage() {
   const [editNomeCat, setEditNomeCat]       = useState('')
   const [showImportarExcel, setShowImportarExcel] = useState(false)
   const [exportando, setExportando]         = useState(false)
+  // Cadastro contínuo: depois de cadastrar, o formulário fica aberto e limpo
+  // (mantendo categoria e unidade) pra ler o próximo produto na sequência.
+  const [continuo, setContinuo] = useState(() => {
+    try { return localStorage.getItem('estoque.cadastroContinuo') !== '0' } catch { return true }
+  })
+  const [cadastradosSessao, setCadastradosSessao] = useState(0)
+  const formRef = useRef<HTMLDivElement>(null)
 
   async function exportarExcel() {
     setExportando(true)
@@ -223,6 +235,17 @@ export default function EstoquePage() {
     }
   }
   const barcodeInputRef             = useRef<HTMLInputElement>(null)
+
+  // F2 abre o cadastro de produto (quando nenhum modal está aberto)
+  const abrirNovoRef = useRef<() => void>(() => {})
+  abrirNovoRef.current = () => { if (!showForm && !ajuste && !showCategorias && !showImportarExcel) abrirNovo() }
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'F2') { e.preventDefault(); abrirNovoRef.current() }
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [])
   const queryClient                 = useQueryClient()
 
   const { data: produtos, isLoading } = useQuery(
@@ -300,12 +323,21 @@ export default function EstoquePage() {
   const criarM = useMutation(
     (payload: any) => api.post('/produtos', payload).then(r => r.data),
     {
-      onSuccess: () => {
+      onSuccess: (p: Produto) => {
         toast.success('Produto cadastrado!')
         queryClient.invalidateQueries('produtos')
-        fecharForm()
+        if (continuo) {
+          setCadastradosSessao(n => n + 1)
+          proximoCadastro(p?.nome)
+        } else {
+          fecharForm()
+        }
       },
-      onError: (e: any) => { toast.error(mensagemErro(e, 'Erro ao cadastrar')) },
+      onError: (e: any) => {
+        toast.error(mensagemErro(e, 'Erro ao cadastrar'))
+        // código de barras repetido é o erro mais comum: volta pra ele
+        if (e?.response?.status === 409) focarCampo('codigo_barras')
+      },
     }
   )
 
@@ -361,12 +393,120 @@ export default function EstoquePage() {
     }
   )
 
+  const [ultimoCadastrado, setUltimoCadastrado] = useState<string | null>(null)
+
   function abrirNovo() {
     setEditando(null)
     setForm({ ...emptyForm })
-    precoVenda.reset(); precoCusto.reset()
+    precoVenda.reset(); precoCusto.set(CUSTO_PADRAO)
+    setCadastradosSessao(0)
+    setUltimoCadastrado(null)
     setShowForm(true)
     setTimeout(() => barcodeInputRef.current?.focus(), 100)
+  }
+
+  /** Limpa o formulário pro próximo produto, mantendo categoria e unidade. */
+  function proximoCadastro(nomeAnterior?: string) {
+    setForm(f => ({ ...emptyForm, categoria_id: f.categoria_id, unidade_medida: f.unidade_medida }))
+    precoVenda.reset(); precoCusto.set(CUSTO_PADRAO)
+    setUltimoCadastrado(nomeAnterior || null)
+    setTimeout(() => barcodeInputRef.current?.focus(), 0)
+  }
+
+  function alternarContinuo(v: boolean) {
+    setContinuo(v)
+    try { localStorage.setItem('estoque.cadastroContinuo', v ? '1' : '0') } catch { /* sem storage */ }
+  }
+
+  // ── Navegação por teclado no formulário de produto ──
+  function camposDoForm(): HTMLElement[] {
+    return Array.from(formRef.current?.querySelectorAll<HTMLElement>('[data-campo]') ?? [])
+  }
+
+  function focarCampo(nome: string) {
+    setTimeout(() => {
+      const el = formRef.current?.querySelector<HTMLElement>(`[data-campo="${nome}"]`)
+      el?.focus()
+    }, 0)
+  }
+
+  function moverFoco(atual: HTMLElement, passo: 1 | -1): boolean {
+    const campos = camposDoForm()
+    const i = campos.indexOf(atual)
+    const alvo = campos[i + passo]
+    if (i < 0 || !alvo) return false
+    alvo.focus()
+    return true
+  }
+
+  async function avisarSeCodigoExiste(codigo: string) {
+    if (!codigo || editando) return
+    try {
+      const { data } = await api.get(`/produtos/barcode/${encodeURIComponent(codigo)}`)
+      toast.error(`Código já cadastrado: "${data.nome}"`, { id: 'codigo-duplicado' })
+      barcodeInputRef.current?.focus()
+      barcodeInputRef.current?.select()
+    } catch { /* 404 = código livre, segue o cadastro */ }
+  }
+
+  function onKeyDownForm(e: React.KeyboardEvent<HTMLDivElement>) {
+    const alvo = e.target as HTMLElement
+    const campo = alvo.dataset?.campo
+    if (e.key === 'Escape') { e.preventDefault(); fecharForm(); return }
+    if (!campo) return  // botões e checkbox seguem o comportamento normal
+
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (e.ctrlKey || e.metaKey) { salvar(); return }
+      if (campo === 'codigo_barras') {
+        // o leitor de código de barras manda Enter no fim da leitura
+        moverFoco(alvo, 1)
+        avisarSeCodigoExiste(form.codigo_barras.trim())
+        return
+      }
+      if (!moverFoco(alvo, 1)) salvar()  // Enter no último campo cadastra
+      return
+    }
+
+    const ehSelect = alvo.tagName === 'SELECT'
+    const input = alvo as HTMLInputElement
+    // ↑/↓ trocam de campo (nas listas, trocam a opção, como de costume)
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !ehSelect) {
+      e.preventDefault()
+      moverFoco(alvo, e.key === 'ArrowDown' ? 1 : -1)
+      return
+    }
+    // ←/→ trocam de campo quando o cursor já está na ponta do texto
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      if (ehSelect) return
+      const dinheiro = alvo.dataset.dinheiro !== undefined
+      const tam = input.value.length
+      const noFim    = input.selectionStart === tam && input.selectionEnd === tam
+      const noInicio = input.selectionStart === 0 && input.selectionEnd === 0
+      if (e.key === 'ArrowRight' && (dinheiro || noFim))    { if (moverFoco(alvo, 1))  e.preventDefault() }
+      if (e.key === 'ArrowLeft'  && (dinheiro || noInicio)) { if (moverFoco(alvo, -1)) e.preventDefault() }
+    }
+  }
+
+  // Campo de preço recém-focado: o 1º dígito substitui o valor (ex.: o custo padrão
+  // R$ 0,01), igual aos campos de texto, que ficam selecionados ao entrar.
+  const substituirPreco = useRef<string | null>(null)
+  function teclaPreco(h: typeof precoVenda, campo: string) {
+    return (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (substituirPreco.current === campo && (/^\d$/.test(e.key) || e.key === 'Backspace')) {
+        substituirPreco.current = null
+        h.reset()
+        if (e.key === 'Backspace') { e.preventDefault(); return }
+      }
+      h.onKeyDown(e)
+    }
+  }
+
+  /** Ao entrar num campo de texto, seleciona o conteúdo pra digitar por cima. */
+  function onFocusForm(e: React.FocusEvent<HTMLDivElement>) {
+    const el = e.target as HTMLInputElement
+    substituirPreco.current = el.dataset?.dinheiro !== undefined ? el.dataset.campo ?? null : null
+    if (el.tagName === 'INPUT' && el.dataset?.campo && el.dataset.dinheiro === undefined) el.select()
   }
 
   function abrirEditar(p: Produto) {
@@ -396,9 +536,10 @@ export default function EstoquePage() {
   }
 
   function salvar() {
-    if (!form.nome.trim()) return toast.error('Nome é obrigatório')
-    if (!form.categoria_id) return toast.error('Selecione uma categoria')
-    if (precoVenda.float <= 0) return toast.error('Preço de venda inválido')
+    if (criarM.isLoading || editarM.isLoading) return
+    if (!form.nome.trim()) { focarCampo('nome'); return toast.error('Nome é obrigatório') }
+    if (!form.categoria_id) { focarCampo('categoria_id'); return toast.error('Selecione uma categoria') }
+    if (precoVenda.float <= 0) { focarCampo('preco_venda'); return toast.error('Preço de venda inválido') }
 
     const payload: any = {
       nome: form.nome.trim(),
@@ -504,7 +645,7 @@ export default function EstoquePage() {
           >
             Importar Excel
           </button>
-          <button onClick={abrirNovo} className="btn-action whitespace-nowrap">
+          <button onClick={abrirNovo} className="btn-action whitespace-nowrap" title="Atalho: F2">
             + Novo Produto
           </button>
         </div>
@@ -633,6 +774,9 @@ export default function EstoquePage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(25,40,25,0.55)', backdropFilter: 'blur(3px)' }}>
           <div
+            ref={formRef}
+            onKeyDown={onKeyDownForm}
+            onFocus={onFocusForm}
             className="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
             style={{ border: '1px solid var(--clr-border)' }}
           >
@@ -646,6 +790,12 @@ export default function EstoquePage() {
                 </h2>
                 {editando && (
                   <p className="text-xs mt-0.5" style={{ color: 'var(--clr-text-muted)' }}>{editando.nome}</p>
+                )}
+                {!editando && cadastradosSessao > 0 && (
+                  <p data-testid="cadastro-contador" className="text-xs mt-0.5" style={{ color: 'var(--clr-green)' }}>
+                    {cadastradosSessao} cadastrado{cadastradosSessao !== 1 ? 's' : ''} agora
+                    {ultimoCadastrado ? ` · último: ${ultimoCadastrado}` : ''}
+                  </p>
                 )}
               </div>
               <button
@@ -664,6 +814,7 @@ export default function EstoquePage() {
                 <label className="label">Código de Barras</label>
                 <input
                   ref={barcodeInputRef}
+                  data-campo="codigo_barras"
                   type="text"
                   value={form.codigo_barras}
                   onChange={e => setForm(f => ({ ...f, codigo_barras: e.target.value }))}
@@ -680,6 +831,7 @@ export default function EstoquePage() {
                 <label className="label">Nome do Produto *</label>
                 <input
                   type="text"
+                  data-campo="nome"
                   value={form.nome}
                   onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
                   className="input"
@@ -691,6 +843,7 @@ export default function EstoquePage() {
                 <label className="label">Fabricante / Marca</label>
                 <input
                   type="text"
+                  data-campo="fabricante"
                   value={form.fabricante}
                   onChange={e => setForm(f => ({ ...f, fabricante: e.target.value }))}
                   className="input"
@@ -702,6 +855,7 @@ export default function EstoquePage() {
                 <label className="label">Categoria *</label>
                 <select
                   data-testid="produto-categoria"
+                  data-campo="categoria_id"
                   value={form.categoria_id}
                   onChange={e => setForm(f => ({ ...f, categoria_id: e.target.value }))}
                   className="input"
@@ -722,8 +876,10 @@ export default function EstoquePage() {
                     type="text"
                     inputMode="numeric"
                     data-testid="produto-preco-venda"
+                    data-campo="preco_venda"
+                    data-dinheiro
                     value={precoVenda.display}
-                    onKeyDown={precoVenda.onKeyDown}
+                    onKeyDown={teclaPreco(precoVenda, 'preco_venda')}
                     onChange={() => {}}
                     className="input font-mono text-right"
                   />
@@ -734,8 +890,10 @@ export default function EstoquePage() {
                     type="text"
                     inputMode="numeric"
                     data-testid="produto-preco-custo"
+                    data-campo="preco_custo"
+                    data-dinheiro
                     value={precoCusto.display}
-                    onKeyDown={precoCusto.onKeyDown}
+                    onKeyDown={teclaPreco(precoCusto, 'preco_custo')}
                     onChange={() => {}}
                     className="input font-mono text-right"
                   />
@@ -747,6 +905,7 @@ export default function EstoquePage() {
                   <label className="label">Unidade</label>
                   <select
                     data-testid="produto-unidade"
+                    data-campo="unidade_medida"
                     value={form.unidade_medida}
                     onChange={e => setForm(f => ({ ...f, unidade_medida: e.target.value }))}
                     className="input"
@@ -760,6 +919,7 @@ export default function EstoquePage() {
                     type="text"
                     inputMode="decimal"
                     data-testid="produto-estoque"
+                    data-campo="estoque_atual"
                     value={form.estoque_atual}
                     onChange={e => setForm(f => ({ ...f, estoque_atual: e.target.value }))}
                     className="input font-mono text-right"
@@ -772,6 +932,7 @@ export default function EstoquePage() {
                     type="text"
                     inputMode="decimal"
                     data-testid="produto-estoque-minimo"
+                    data-campo="estoque_minimo"
                     value={form.estoque_minimo}
                     onChange={e => setForm(f => ({ ...f, estoque_minimo: e.target.value }))}
                     className="input font-mono text-right"
@@ -791,6 +952,24 @@ export default function EstoquePage() {
                   </span>
                 </div>
               )}
+            </div>
+
+            <div className="px-6 pb-3 space-y-2">
+              {!editando && (
+                <label className="flex items-center gap-2 text-xs cursor-pointer select-none" style={{ color: 'var(--clr-text-med)' }}>
+                  <input
+                    type="checkbox"
+                    data-testid="cadastro-continuo"
+                    checked={continuo}
+                    onChange={e => alternarContinuo(e.target.checked)}
+                  />
+                  Continuar cadastrando (mantém categoria e unidade para o próximo)
+                </label>
+              )}
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--clr-text-muted)' }}>
+                <b>Enter</b> próximo campo · <b>Enter</b> no último campo ou <b>Ctrl+Enter</b> salva ·
+                {' '}<b>↑ ↓</b> sobe/desce (nas listas, troca a opção) · <b>← →</b> campo ao lado · <b>Esc</b> fecha
+              </p>
             </div>
 
             <div className="flex gap-3 px-6 pb-6">

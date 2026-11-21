@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from 'react-query'
 import toast from 'react-hot-toast'
@@ -9,6 +9,7 @@ import { mensagemErro } from '@/utils/erro'
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
   const [senha, setSenha]       = useState('')
+  const senhaRef                = useRef<HTMLInputElement>(null)
   const [showSenha, setShowSenha] = useState(false)
   const navigate = useNavigate()
   const setAuth  = useAuthStore(s => s.setAuth)
@@ -151,6 +152,7 @@ export default function LoginPage() {
               <label className="label">Senha</label>
               <div className="relative">
                 <input
+                  ref={senhaRef}
                   type={showSenha ? 'text' : 'password'}
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
@@ -187,19 +189,28 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo — só no servidor de desenvolvimento (npm run dev); nunca no build instalado no cliente */}
-          {import.meta.env.DEV && (
+          {/* Acesso rápido — em produção só o e-mail do Admin (a senha nunca vai no build
+              instalado no cliente); no servidor de desenvolvimento (npm run dev) preenche
+              também a senha e mostra o Operador */}
           <div className="rounded-xl p-4" style={{ background: 'var(--clr-green-pale)', border: '1px solid var(--clr-border)' }}>
-            <p className="label mb-3">Acesso de Demonstração</p>
+            <p className="label mb-3">{import.meta.env.DEV ? 'Acesso de Demonstração' : 'Acesso rápido'}</p>
             <div className="space-y-1.5">
-              {[
-                { perfil: 'Admin',    email: 'admin@gironegocios.com', senha: 'Admin@1234' },
-                { perfil: 'Operador', email: 'caixa@gironegocios.com', senha: 'Caixa@1234' },
-              ].map(c => (
+              {(import.meta.env.DEV
+                ? [
+                    { perfil: 'Admin',    email: 'admin@gironegocios.com', senha: 'Admin@1234' },
+                    { perfil: 'Operador', email: 'caixa@gironegocios.com', senha: 'Caixa@1234' },
+                  ]
+                : [{ perfil: 'Admin', email: 'admin@gironegocios.com', senha: '' }]
+              ).map(c => (
                 <button
                   key={c.email}
                   type="button"
-                  onClick={() => { setEmail(c.email); setSenha(c.senha) }}
+                  data-testid="acesso-rapido"
+                  onClick={() => {
+                    setEmail(c.email)
+                    setSenha(c.senha)
+                    senhaRef.current?.focus()
+                  }}
                   className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-left transition-colors"
                   style={{ background: '#fff', border: '1px solid var(--clr-border)', color: 'var(--clr-text)' }}
                   onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--clr-green-med)'}
@@ -211,7 +222,6 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
-          )}
         </div>
       </div>
     </div>
