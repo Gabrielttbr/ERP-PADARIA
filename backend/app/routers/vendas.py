@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -13,6 +16,7 @@ from app.services import escpos_service
 from app.services.escpos_service import DadosRecibo, ItemRecibo
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("", response_model=VendaRead, status_code=201)
@@ -33,7 +37,8 @@ async def criar_venda(
     try:
         await _imprimir_recibo(venda, current_user.nome, db)
     except Exception:
-        pass  # Falha na impressão não cancela a venda
+        # Falha na impressão não cancela a venda, mas fica registrada no log
+        logger.exception("Erro ao imprimir o recibo da venda %s", venda.id)
 
     return _build_venda_read(venda)
 
@@ -193,4 +198,6 @@ def _pagamentos_recebidos(venda: Venda) -> list[dict]:
 
 async def _imprimir_recibo(venda: Venda, operador_nome: str, db: AsyncSession):
     dados = await _montar_dados_recibo(venda, operador_nome, db)
-    escpos_service.imprimir(dados)
+    # A impressão é bloqueante (USB/socket): roda numa thread para não
+    # congelar o servidor enquanto espera a impressora.
+    await asyncio.to_thread(escpos_service.imprimir, dados)
