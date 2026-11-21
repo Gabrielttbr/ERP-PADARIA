@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 setlocal
 
 :: ============================================================================
@@ -41,7 +40,7 @@ echo  ============================================================
 echo.
 pause
 
-:: ── Pre-requisitos ───────────────────────────────────────────────────────────
+:: --- Pre-requisitos ---
 git --version >nul 2>&1
 if errorlevel 1 (
     set "MOTIVO=Git nao encontrado. Rode o INSTALAR_SISTEMA.bat."
@@ -62,7 +61,7 @@ echo  Versao instalada:
 git log -1 --date=short --format="     %%h  %%ad  %%s"
 echo.
 
-:: ── 1. Para o servidor ───────────────────────────────────────────────────────
+:: --- 1. Para o servidor ---
 set "ETAPA=parar"
 echo  [1/5] Parando o servidor...
 call :parar_servidor
@@ -74,7 +73,7 @@ if not errorlevel 1 (
 )
 echo  [OK] Servidor parado.
 
-:: ── 2. Backup do banco ───────────────────────────────────────────────────────
+:: --- 2. Backup do banco ---
 set "ETAPA=backup"
 echo.
 echo  [2/5] Fazendo backup do banco de dados...
@@ -103,7 +102,7 @@ if not "%TAM_BANCO%"=="%TAM_BACKUP%" (
 )
 echo  [OK] Backup: %BACKUP_FILE%  (%TAM_BACKUP% bytes)
 
-:: ── 3. Baixa a versao nova ───────────────────────────────────────────────────
+:: --- 3. Baixa a versao nova ---
 set "ETAPA=git"
 echo.
 echo  [3/5] Baixando a versao nova...
@@ -130,7 +129,7 @@ if "%VERSAO_ANTES%"=="%VERSAO_DEPOIS%" (
     git log --date=short --format="     %%h  %%ad  %%s" %VERSAO_ANTES%..HEAD
 )
 
-:: ── 4. Dependencias e build ──────────────────────────────────────────────────
+:: --- 4. Dependencias e build ---
 set "ETAPA=build"
 echo.
 echo  [4/5] Atualizando dependencias e recompilando...
@@ -158,7 +157,7 @@ if errorlevel 1 (
 )
 echo  [OK] Interface compilada.
 
-:: ── 5. Reinicia ──────────────────────────────────────────────────────────────
+:: --- 5. Reinicia ---
 echo.
 echo  [5/5] Iniciando o sistema...
 start "ERP Padaria" cmd /k ""%INICIAR%""
@@ -175,7 +174,7 @@ pause
 exit /b 0
 
 
-:: ── Falha: explica o que aconteceu e o estado em que o sistema ficou ─────────
+:: --- Falha: explica o que aconteceu e o estado em que o sistema ficou ---
 :falha
 echo.
 echo  ============================================================
