@@ -12,7 +12,7 @@ export default async function globalSetup(config: FullConfig) {
   const browser = await chromium.launch()
   const page = await browser.newPage({ baseURL })
   await page.goto('/login')
-  await page.getByPlaceholder('usuario@padaria.com').fill(ADMIN.email)
+  await page.getByPlaceholder('usuario@gironegocios.com').fill(ADMIN.email)
   await page.getByPlaceholder('••••••••').fill(ADMIN.senha)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await page.waitForURL('**/dashboard')

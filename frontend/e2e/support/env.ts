@@ -33,4 +33,4 @@ export const E2E_ENV: Record<string, string> = {
 export const PYTHON = path.join(BACKEND_DIR, 'venv/bin/python')
 export const UVICORN = path.join(BACKEND_DIR, 'venv/bin/uvicorn')
 
-export const ADMIN = { email: 'admin@padaria.com', senha: 'Admin@1234' }
+export const ADMIN = { email: 'admin@gironegocios.com', senha: 'Admin@1234' }

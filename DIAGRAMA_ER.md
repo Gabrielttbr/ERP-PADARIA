@@ -1,4 +1,4 @@
-# Diagrama Entidade-Relacionamento — ERP Padaria
+# Diagrama Entidade-Relacionamento — Sistema PDV
 
 Gerado a partir dos modelos SQLAlchemy em `backend/app/models/`.
 21 tabelas, agrupadas por domínio. Visualize no GitHub, no VS Code (extensão *Markdown Preview Mermaid Support*)

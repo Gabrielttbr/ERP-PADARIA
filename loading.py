@@ -39,7 +39,7 @@ class LoadingApp:
 
     def _build_window(self):
         W, H = 500, 370
-        self.root.title("ERP Padaria")
+        self.root.title("Sistema PDV")
         self.root.overrideredirect(True)
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
@@ -52,9 +52,9 @@ class LoadingApp:
         hdr = tk.Frame(self.root, bg=PANEL)
         hdr.pack(fill="x")
         tk.Frame(hdr, bg=PANEL, height=20).pack()
-        tk.Label(hdr, text="ERP Padaria",
+        tk.Label(hdr, text="Sistema PDV",
                  font=("Segoe UI", 26, "bold"), bg=PANEL, fg=GREEN_LT).pack()
-        tk.Label(hdr, text="Sistema de Gestão de Padaria",
+        tk.Label(hdr, text="GiroNegócios · PDV & Gestão",
                  font=("Segoe UI", 10), bg=PANEL, fg=GREEN_DK).pack(pady=(3, 0))
         tk.Frame(hdr, bg=PANEL, height=18).pack()
 

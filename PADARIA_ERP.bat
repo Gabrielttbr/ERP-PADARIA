@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title ERP Padaria
+title Sistema PDV
 setlocal
 
 set "ROOT=C:\Padaria"
@@ -24,7 +24,7 @@ if errorlevel 1 (
 
 echo  [3/3] Iniciando servidor...
 cd /d "%BACKEND%"
-start "ERP Padaria" /min cmd /k "venv\Scripts\activate && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+start "Sistema PDV" /min cmd /k "venv\Scripts\activate && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 timeout /t 4 /nobreak >nul
 start http://localhost:8000
 

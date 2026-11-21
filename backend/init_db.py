@@ -11,7 +11,7 @@ Diferente do seed_dev.py, este script:
 É idempotente: rodar de novo não duplica nada.
 
 Variáveis lidas do ambiente (.env do cliente):
-  ADMIN_EMAIL     (default: admin@padaria.com)
+  ADMIN_EMAIL     (default: admin@gironegocios.com)
   ADMIN_PASSWORD  (default: Admin@1234)
   ADMIN_NOME      (default: Administrador)
   PADARIA_NOME / PADARIA_* -> branding da empresa (via Settings)
@@ -49,7 +49,7 @@ async def main() -> None:
         if existe_usuario:
             print("-- já existem usuários; admin não recriado")
         else:
-            email = os.getenv("ADMIN_EMAIL", "admin@padaria.com")
+            email = os.getenv("ADMIN_EMAIL", "admin@gironegocios.com")
             senha = os.getenv("ADMIN_PASSWORD", "Admin@1234")
             nome = os.getenv("ADMIN_NOME", "Administrador")
             db.add(Usuario(

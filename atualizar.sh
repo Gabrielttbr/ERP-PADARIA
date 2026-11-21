@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Atualiza o ERP Padaria sem apagar dados (Linux/macOS).
+# Atualiza o Sistema PDV sem apagar dados (Linux/macOS).
 # Equivalente ao ATUALIZAR_SISTEMA.bat (Windows).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
 
-echo "== Atualizador ERP Padaria (Linux/macOS) =="
+echo "== Atualizador Sistema PDV (Linux/macOS) =="
 
 # ── 1. Backup do banco SQLite (se existir) ──────────────────────────────────
 if [ -f backend/padaria.db ]; then

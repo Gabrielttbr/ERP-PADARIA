@@ -56,7 +56,7 @@ export default function LoginPage() {
           </div>
           <div>
             <div className="font-bold text-sm" style={{ color: 'rgba(220,245,220,0.9)' }}>
-              Nexshell
+              GiroNegócios
             </div>
             <div className="text-[10px] font-medium tracking-widest" style={{ color: 'var(--clr-accent)' }}>
               SISTEMA PDV
@@ -75,11 +75,11 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-3xl font-bold leading-snug" style={{ color: 'rgba(220,245,220,0.95)' }}>
-            Gestão completa<br />para sua padaria.
+            Gestão completa<br />para o seu negócio.
           </h1>
 
           <p className="text-sm leading-relaxed" style={{ color: 'rgba(180,220,180,0.55)' }}>
-            Controle caixa, estoque e vendas em tempo real com um sistema pensado para padeiros de verdade.
+            Controle caixa, estoque e vendas em tempo real com um sistema pensado para quem vende de verdade.
           </p>
 
           <div className="space-y-3 pt-2">
@@ -106,7 +106,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.15)' }}>
-          Nexshell · PDV & Gestão
+          GiroNegócios · PDV & Gestão
         </p>
       </div>
 
@@ -123,7 +123,7 @@ export default function LoginPage() {
                 <path d="M 114 46 L 174 46 L 208 194 L 178 194 L 144 56 L 114 76 Z" fill="#52B788"/>
               </svg>
             </div>
-            <span className="font-bold text-[var(--clr-text)]">Nexshell</span>
+            <span className="font-bold text-[var(--clr-text)]">GiroNegócios</span>
           </div>
 
           <div>
@@ -140,7 +140,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="usuario@padaria.com"
+                placeholder="usuario@gironegocios.com"
                 className="input h-11"
                 required
                 autoFocus
@@ -193,8 +193,8 @@ export default function LoginPage() {
             <p className="label mb-3">Acesso de Demonstração</p>
             <div className="space-y-1.5">
               {[
-                { perfil: 'Admin',    email: 'admin@padaria.com', senha: 'Admin@1234' },
-                { perfil: 'Operador', email: 'caixa@padaria.com', senha: 'Caixa@1234' },
+                { perfil: 'Admin',    email: 'admin@gironegocios.com', senha: 'Admin@1234' },
+                { perfil: 'Operador', email: 'caixa@gironegocios.com', senha: 'Caixa@1234' },
               ].map(c => (
                 <button
                   key={c.email}

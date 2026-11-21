@@ -29,13 +29,13 @@ async def seed():
 
         # Categorias
         cats = [
-            Categoria(nome="Pães",     descricao="Pães e panificados",    ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Bolos",    descricao="Bolos e tortas",         ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Salgados", descricao="Salgados assados/fritos",ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Bebidas",  descricao="Bebidas frias e quentes",ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Doces",    descricao="Doces e confeitaria",    ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Frios",    descricao="Frios e laticínios",     ativo=True, created_at=now, updated_at=now),
-            Categoria(nome="Outros",   descricao="Demais produtos",        ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Mercearia",  descricao="Alimentos e itens secos",  ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Hortifruti", descricao="Frutas, verduras e legumes",ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Limpeza",    descricao="Produtos de limpeza",       ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Bebidas",    descricao="Bebidas frias e quentes",   ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Higiene",    descricao="Higiene e cuidados pessoais",ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Frios",      descricao="Frios e laticínios",        ativo=True, created_at=now, updated_at=now),
+            Categoria(nome="Outros",     descricao="Demais produtos",           ativo=True, created_at=now, updated_at=now),
         ]
         for c in cats:
             db.add(c)
@@ -44,7 +44,7 @@ async def seed():
 
         # Fornecedores
         forns = [
-            Fornecedor(razao_social="Distribuidora Farinha & Cia", cnpj="12.345.678/0001-90",
+            Fornecedor(razao_social="Distribuidora Alimentos & Cia", cnpj="12.345.678/0001-90",
                        telefone="(11) 99999-1111", ativo=True, created_at=now, updated_at=now),
             Fornecedor(razao_social="Bebidas Norte Sul Ltda", cnpj="98.765.432/0001-10",
                        ativo=True, created_at=now, updated_at=now),
@@ -57,9 +57,9 @@ async def seed():
 
         # Usuários
         usuarios_data = [
-            ("Administrador", "admin@padaria.com",  "admin"),
-            ("Operador Caixa","caixa@padaria.com",  "caixa"),
-            ("Estoquista",    "estoque@padaria.com","estoquista"),
+            ("Administrador", "admin@gironegocios.com",  "admin"),
+            ("Operador Caixa","caixa@gironegocios.com",  "caixa"),
+            ("Estoquista",    "estoque@gironegocios.com","estoquista"),
         ]
         for nome, email, perfil in usuarios_data:
             db.add(Usuario(
@@ -77,20 +77,20 @@ async def seed():
 
         # Produtos
         produtos_data = [
-            ("7891000315507","PAO-FRANCES",  "Pão Francês (unidade)",      1, 1, "un",  0.25,  0.60, 200, 50),
-            ("7891000315514","PAO-FORMA",    "Pão de Forma 500g",           1, 1, "un",  3.50,  6.99,  30,  5),
-            ("7891000315521","PAO-INTEGRAL", "Pão Integral 400g",           1, 1, "un",  4.20,  8.50,  20,  5),
-            ("7891000315528","BOLO-CENOURA", "Bolo de Cenoura (fatia)",     2, 1, "un",  2.00,  4.50,  15,  3),
-            ("7891000315535","BOLO-CHOCO",   "Bolo de Chocolate (fatia)",   2, 1, "un",  2.20,  5.00,  15,  3),
-            ("7891000315542","COXINHA",      "Coxinha de Frango",           3, 1, "un",  1.50,  3.50,  40, 10),
-            ("7891000315549","ENROLADO",     "Enrolado de Salsicha",        3, 1, "un",  1.20,  3.00,  40, 10),
-            ("7891000315556","CAFE-P",       "Café Coado (copo pequeno)",   4, None,"un",0.30,  2.00,   0,  0),
-            ("7891000315563","CAFE-G",       "Café Coado (copo grande)",    4, None,"un",0.40,  3.00,   0,  0),
-            ("7891000315570","SUCO-LAR",     "Suco de Laranja 300ml",       4, None,"un",1.80,  4.50,  10,  3),
-            ("7891000315577","REFRIGERANTE", "Refrigerante Lata 350ml",     4, 2,   "un",2.50,  5.00,  24,  6),
-            ("7891000315584","DOCE-LEITE",   "Doce de Leite 200g",          5, 3,   "un",4.00,  8.00,   2,  3),  # estoque baixo para demo
-            ("7891000315591","QUEIJO-MINAS", "Queijo Minas Frescal 400g",   6, 3,   "un",7.50, 14.90,  10,  3),
-            ("7891000315598","MANTEIGA",     "Manteiga com Sal 200g",       6, 3,   "un",5.00,  9.90,  15,  5),
+            ("7891000315507","ARROZ-5KG",    "Arroz Tipo 1 5kg",            1, 1, "un", 18.00, 27.90,  40, 10),
+            ("7891000315514","FEIJAO-1KG",   "Feijão Carioca 1kg",          1, 1, "un",  5.50,  8.99,  50, 10),
+            ("7891000315521","CAFE-500G",    "Café Torrado 500g",           1, 1, "un", 12.00, 19.90,  25,  5),
+            ("7891000315528","BANANA",       "Banana Prata",                2, None,"kg",3.00,  6.99,  20,  5),
+            ("7891000315535","TOMATE",       "Tomate",                      2, None,"kg",4.00,  8.49,  15,  5),
+            ("7891000315542","DETERGENTE",   "Detergente 500ml",            3, 1, "un",  1.50,  2.99,  60, 12),
+            ("7891000315549","SABAO-PO",     "Sabão em Pó 1kg",             3, 1, "un",  8.00, 13.90,  20,  5),
+            ("7891000315556","AGUA-500",     "Água Mineral 500ml",          4, 2, "un",  0.80,  2.50,  48, 12),
+            ("7891000315563","REFRIGERANTE", "Refrigerante Lata 350ml",     4, 2, "un",  2.50,  5.00,  24,  6),
+            ("7891000315570","SUCO-1L",      "Suco de Laranja 1L",          4, 2, "un",  4.50,  8.90,  12,  4),
+            ("7891000315577","SABONETE",     "Sabonete 90g",                5, 1, "un",  1.20,  2.79,  30,  6),
+            ("7891000315584","CREME-DENTAL", "Creme Dental 90g",            5, 1, "un",  2.80,  5.49,   2,  5),  # estoque baixo para demo
+            ("7891000315591","QUEIJO-MUS",   "Queijo Mussarela",            6, 3, "kg", 32.00, 49.90,   8,  2),
+            ("7891000315598","MANTEIGA",     "Manteiga com Sal 200g",       6, 3, "un",  5.00,  9.90,  15,  5),
         ]
         for row in produtos_data:
             barcode, sku, nome, cat_id, forn_id, unidade, custo, venda, estoque, minimo = row
@@ -121,7 +121,7 @@ async def seed():
 
         await db.commit()
         print("\nDONE Seed concluído! Acesse http://localhost:8000/api/docs")
-        print("   Login: admin@padaria.com / Admin@1234")
+        print("   Login: admin@gironegocios.com / Admin@1234")
 
 
 async def main():

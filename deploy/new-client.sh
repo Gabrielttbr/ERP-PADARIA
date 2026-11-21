@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Provisiona uma cópia ISOLADA do ERP Padaria para um cliente.
+# Provisiona uma cópia ISOLADA do Sistema PDV para um cliente.
 #
 #   deploy/new-client.sh <slug> <dominio>
 #   ex.: deploy/new-client.sh kero sistema.padariakero.com.br

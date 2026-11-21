@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ERP Padaria are documented here.
+All notable changes to Sistema PDV are documented here.
 
 This project adheres to [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/).
 

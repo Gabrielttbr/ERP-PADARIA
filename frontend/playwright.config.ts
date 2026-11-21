@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 import { E2E_ENV, TMP_BACKEND, UVICORN } from './e2e/support/env'
 
 /**
- * Testes E2E do ERP Padaria — cenários do cenarios_testes.md validados pelo frontend.
+ * Testes E2E do Sistema PDV — cenários do cenarios_testes.md validados pelo frontend.
  * Sobe backend (SQLite próprio, e2e_padaria.db) e frontend (Vite) automaticamente.
  * Os testes rodam em série: todos compartilham o mesmo banco, resetado pelo seed.
  */

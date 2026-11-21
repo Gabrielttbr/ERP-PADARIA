@@ -1,4 +1,4 @@
-# Cenários de Testes — ERP Padaria
+# Cenários de Testes — Sistema PDV
 
 Cenários BDD em **Gherkin (pt-BR)** para validar as operações principais: PDV/venda, caixa,
 dashboard (financeiro + operacional), relatórios (por produto, por categoria, por dia),

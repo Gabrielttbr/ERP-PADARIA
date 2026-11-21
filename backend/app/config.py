@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     )
 
     # App
-    app_name: str = "ERP Padaria"
+    app_name: str = "Sistema PDV"
     app_env: str = "development"
     # Bind interno do container em todas as interfaces; a exposição ao host é
     # restrita a 127.0.0.1 pelo docker-compose (ports: "127.0.0.1:...:8000").
@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # erros vazam stack trace. O ambiente de dev liga via APP_DEBUG=true (.env).
     app_debug: bool = False
     # Fuso do negócio: todas as datas são gravadas e exibidas nele (ver
-    # app/utils/tempo.py). Só muda se a padaria não for em horário de Brasília
+    # app/utils/tempo.py). Só muda se a empresa não for em horário de Brasília
     # (ex.: Manaus/Amazonas -> America/Manaus).
     report_timezone: str = "America/Sao_Paulo"
 
@@ -69,8 +69,9 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",")]
 
-    # Padaria info (usado no cupom)
-    padaria_nome: str = "Padaria Exemplo"
+    # Dados da empresa (usados no cupom). Os nomes padaria_* / PADARIA_* ficam
+    # por compatibilidade com o .env das instalações existentes.
+    padaria_nome: str = "Minha Empresa"
     padaria_cnpj: str = "00.000.000/0001-00"
     padaria_endereco: str = ""
     padaria_cidade: str = ""

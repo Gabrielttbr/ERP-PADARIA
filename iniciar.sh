@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Inicia o ERP Padaria em modo bare-metal no Linux/macOS.
+# Inicia o Sistema PDV em modo bare-metal no Linux/macOS.
 # Equivalente ao PADARIA_ERP.bat (Windows). Para o caminho universal com
 # Docker (funciona igual em qualquer SO), veja o README: `docker compose up`.
 set -euo pipefail

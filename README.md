@@ -1,6 +1,6 @@
 <div align="center">
 
-# ERP Padaria — Sistema de Gestão e PDV
+# Sistema PDV — Sistema de Gestão e PDV
 
 [![CI](https://img.shields.io/github/actions/workflow/status/AlexandreAlan/ERP-PADARIA/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/AlexandreAlan/ERP-PADARIA/actions)
 [![MIT License](https://img.shields.io/badge/licença-MIT-10b981?style=flat-square)](LICENSE)
@@ -8,7 +8,7 @@
 [![Demo](https://img.shields.io/badge/demo-ao%20vivo-10b981?style=flat-square)](https://padaria.morenadoaco.com.br)
 [![PRs Welcome](https://img.shields.io/badge/PRs-bem--vindos-10b981?style=flat-square)](CONTRIBUTING.md)
 
-Sistema completo de frente de caixa (PDV) e gestão para padarias.  
+Sistema completo de frente de caixa (PDV) e gestão para o comércio.  
 **Stack:** FastAPI · React 18 · TypeScript · SQLite (dev) / PostgreSQL (produção, em Docker)
 
 [🚀 Demo ao vivo](https://padaria.morenadoaco.com.br) · [Issues](https://github.com/AlexandreAlan/ERP-PADARIA/issues) · [Releases](https://github.com/AlexandreAlan/ERP-PADARIA/releases)
@@ -60,7 +60,7 @@ Sistema completo de frente de caixa (PDV) e gestão para padarias.
 > A seção abaixo descreve o instalador Windows; para Linux/macOS bare-metal, use os scripts `.sh`
 > correspondentes (mesmos passos: venv + dependências + banco + super admin).
 
-Use este caminho quando for instalar o sistema em um computador que **nunca teve o ERP Padaria**.  
+Use este caminho quando for instalar o sistema em um computador que **nunca teve o Sistema PDV**.  
 O instalador faz tudo automaticamente: baixa o código, instala Python e Node.js, cria o banco de dados e coloca um atalho na área de trabalho.
 
 ### Pré-requisitos mínimos
@@ -117,7 +117,7 @@ O instalador vai:
 7. Criar o **banco de dados** SQLite e populá-lo com dados de exemplo
 8. Instalar dependências do frontend e **compilar** o React
 9. Criar o script **`C:\Padaria\Iniciar_Padaria.bat`**
-10. Criar um **atalho "Padaria ERP"** na área de trabalho
+10. Criar um **atalho "Sistema PDV"** na área de trabalho
 
 Ao final, será perguntado se deseja iniciar o sistema imediatamente.
 
@@ -128,7 +128,7 @@ Ao final, será perguntado se deseja iniciar o sistema imediatamente.
 Após a instalação, basta dar dois cliques no atalho da área de trabalho:
 
 ```
-Padaria ERP
+Sistema PDV
 ```
 
 Ou execute diretamente:
@@ -283,9 +283,9 @@ Com dados de exemplo (`seed_dev.py`, uso dev/demo), são criados os três:
 
 | Perfil      | E-mail                  | Senha          |
 |-------------|-------------------------|----------------|
-| Admin       | admin@padaria.com       | Admin@1234     |
-| Caixa       | caixa@padaria.com       | Caixa@1234     |
-| Estoquista  | estoque@padaria.com     | Estoque@1234   |
+| Admin       | admin@gironegocios.com       | Admin@1234     |
+| Caixa       | caixa@gironegocios.com       | Caixa@1234     |
+| Estoquista  | estoque@gironegocios.com     | Estoque@1234   |
 
 > Troque as senhas imediatamente após instalar em produção.
 
@@ -392,7 +392,7 @@ Ele é criado automaticamente pelo instalador, mas pode ser editado com o Bloco 
 
 ```env
 # ── Aplicação ────────────────────────────────────
-APP_NAME=Minha Padaria
+APP_NAME=Sistema PDV
 APP_ENV=production          # development | production
 APP_DEBUG=false             # true = ativa Swagger público
 APP_HOST=0.0.0.0
@@ -429,8 +429,8 @@ PRINTER_PAPER_WIDTH=80      # 80 = 80mm (42 colunas) | 58 = 58mm (32 colunas)
 # PRINTER_NETWORK_IP=192.168.1.100
 # PRINTER_NETWORK_PORT=9100
 
-# ── Informações da padaria (aparecem no cupom) ───
-PADARIA_NOME=Minha Padaria
+# ── Informações da empresa (aparecem no cupom) ───
+PADARIA_NOME=Minha Empresa
 PADARIA_CNPJ=00.000.000/0001-00
 PADARIA_ENDERECO=Rua Exemplo, 123
 PADARIA_CIDADE=Cidade - UF
@@ -452,7 +452,7 @@ Não exige nenhuma instalação. O banco é criado como um arquivo em:
 backend\padaria.db
 ```
 
-Ideal para uso em padarias com um único computador.
+Ideal para estabelecimentos com um único computador.
 
 ### PostgreSQL (produção — recomendado para múltiplos computadores)
 
@@ -626,7 +626,7 @@ ERP-PADARIA/
 | `INSTALAR_SISTEMA.bat`   | Instalar em uma máquina nova (executa uma vez)             |
 | `erp-padaria.bat`        | Iniciar o sistema para desenvolvimento                     |
 | `C:\Padaria\Iniciar_Padaria.bat` | Iniciar o sistema em produção (criado pelo instalador) |
-| `backend\.env`           | Configurações do sistema (banco, impressora, padaria)      |
+| `backend\.env`           | Configurações do sistema (banco, impressora, empresa)      |
 | `backend\seed_dev.py`    | Recriar o banco de dados com dados de exemplo              |
 
 ---
