@@ -27,8 +27,14 @@ reportlab>=4.2.5
 openpyxl>=3.1.5
 Jinja2>=3.1.4
 
-# Thermal printer ESC/POS
-python-escpos>=3.1
+# Thermal printer ESC/POS — impressão USB (obrigatórias)
+python-escpos[usb]>=3.1
+# pyusb: acesso USB usado pelo python-escpos (PRINTER_TYPE=usb).
+pyusb>=1.2.1
+# libusb: biblioteca nativa que o pyusb usa. Este pacote já traz a libusb
+# compilada (libusb-1.0.dll no Windows), então não precisa instalar nada à
+# parte. No Docker o pacote libusb-1.0-0 do sistema também é instalado.
+libusb-package>=1.0.26
 
 # Date/time
 python-dateutil>=2.9.0

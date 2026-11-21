@@ -104,6 +104,10 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 5
 
+    # Logs: pasta do app.log (relativa ao backend/) e nível mínimo gravado.
+    log_dir: str = "logs"
+    log_level: str = "INFO"
+
     @model_validator(mode="after")
     def _validar_seguranca_producao(self) -> "Settings":
         """Em produção (APP_ENV=production), recusa subir com um JWT fraco —
