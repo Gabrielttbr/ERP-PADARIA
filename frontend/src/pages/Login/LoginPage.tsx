@@ -187,7 +187,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo */}
+          {/* Demo — só no servidor de desenvolvimento (npm run dev); nunca no build instalado no cliente */}
+          {import.meta.env.DEV && (
           <div className="rounded-xl p-4" style={{ background: 'var(--clr-green-pale)', border: '1px solid var(--clr-border)' }}>
             <p className="label mb-3">Acesso de Demonstração</p>
             <div className="space-y-1.5">
@@ -210,6 +211,7 @@ export default function LoginPage() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
