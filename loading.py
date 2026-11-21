@@ -163,7 +163,16 @@ class LoadingApp:
 
         self.root.after(0, lambda: self._set("browser", "loading"))
         time.sleep(0.5)
-        webbrowser.open("http://localhost:8000")
+        abrir = os.path.join(BASE, "abrir_sistema.ps1")
+        try:
+            # Tela cheia (Edge/Chrome em modo aplicativo); o script ja espera o servidor
+            subprocess.Popen(
+                ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass",
+                 "-WindowStyle", "Hidden", "-File", abrir],
+                creationflags=subprocess.CREATE_NO_WINDOW,
+            )
+        except Exception:
+            webbrowser.open("http://localhost:8000")
         self.root.after(0, lambda: self._set("browser", "ok"))
 
         self.root.after(0, lambda: self._headline.config(

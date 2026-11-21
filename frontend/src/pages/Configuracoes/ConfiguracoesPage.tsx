@@ -534,9 +534,19 @@ export default function ConfiguracoesPage() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-      <div>
-        <h1 className="font-display text-2xl font-bold" style={{ color: '#1C140D' }}>Configurações</h1>
-        <p className="text-sm mt-1" style={{ color: '#8A7A6A' }}>Gerencie os dados da empresa e os usuários do sistema</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold" style={{ color: '#1C140D' }}>Configurações</h1>
+          <p className="text-sm mt-1" style={{ color: '#8A7A6A' }}>Gerencie os dados da empresa e os usuários do sistema</p>
+        </div>
+        <div
+          data-testid="versao-sistema"
+          className="px-3 py-1.5 rounded-lg text-xs font-medium"
+          style={{ background: '#FFFFFF', border: '1px solid #E8DDD0', color: 'var(--clr-text-muted)' }}
+          title="Versão instalada do sistema"
+        >
+          GiroNegócios · Versão <span className="font-bold" style={{ color: 'var(--clr-green)' }}>{__APP_VERSION__}</span>
+        </div>
       </div>
 
       {/* Tabs */}

@@ -4,7 +4,8 @@
 # - Abre o Edge (ou o Chrome) em modo aplicativo (sem barra de endereco e abas)
 #   e em tela cheia. F11 sai da tela cheia; Alt+F4 fecha a janela.
 # - Usa um perfil proprio do navegador, separado do uso pessoal: assim a janela
-#   sempre abre em tela cheia, mesmo com o navegador ja aberto.
+#   sempre abre em tela cheia, mesmo com o navegador ja aberto, e sem login,
+#   sincronizacao ou extensoes da conta do usuario.
 # - Sem Edge nem Chrome, abre no navegador padrao (janela comum).
 
 param([string]$Url = "http://localhost:8000")
@@ -45,5 +46,11 @@ Start-Process -FilePath $exe -ArgumentList @(
     "--start-fullscreen",
     "--user-data-dir=`"$perfil`"",
     "--no-first-run",
-    "--no-default-browser-check"
+    "--no-default-browser-check",
+    # Perfil so do sistema: sem login automatico na conta Microsoft, sem
+    # sincronizar e sem extensoes (que abririam janelas/abas por cima)
+    "--disable-sync",
+    "--disable-extensions",
+    "--disable-features=msImplicitSignin,msEdgeSyncConsent",
+    "--disable-session-crashed-bubble"
 )

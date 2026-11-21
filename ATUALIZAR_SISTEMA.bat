@@ -106,16 +106,13 @@ echo  [OK] Backup: %BACKUP_FILE%  (%TAM_BACKUP% bytes)
 set "ETAPA=git"
 echo.
 echo  [3/5] Baixando a versao nova...
-:: O instalador gera um Iniciar_Padaria.bat proprio por cima do arquivo do
-:: repositorio. Guarda a copia local, devolve o original pro git e restaura depois.
+:: O Iniciar_Padaria.bat vem do repositorio. Instalacoes antigas tem uma versao
+:: gerada pelo instalador por cima dele: descarta, para o git atualizar o arquivo.
 set "INICIAR=%ROOT%\Iniciar_Padaria.bat"
-set "INICIAR_LOCAL=%TEMP%\Iniciar_Padaria.local.bat"
-if exist "%INICIAR%" copy /Y "%INICIAR%" "%INICIAR_LOCAL%" >nul
 git checkout -- Iniciar_Padaria.bat >nul 2>&1
 
 git pull --ff-only
 set "ERRO_GIT=%errorlevel%"
-if exist "%INICIAR_LOCAL%" copy /Y "%INICIAR_LOCAL%" "%INICIAR%" >nul
 if not "%ERRO_GIT%"=="0" (
     set "MOTIVO=O git pull falhou (internet? arquivos alterados em %ROOT%?). O sistema continua na versao anterior."
     goto falha

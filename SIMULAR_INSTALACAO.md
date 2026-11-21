@@ -98,7 +98,7 @@ EOF
    6. Criando o venv e instalando as dependências Python
    7. **Criando o banco com o `init_db.py`** (admin, empresa, Caixa 01 e Diverso 999)
    8. `npm install` + `npm run build` do frontend
-   9. Criando o `Iniciar_Padaria.bat` e o atalho **Sistema PDV** na área de trabalho
+   9. Conferindo o `Iniciar_Padaria.bat` e criando o atalho **Sistema PDV** na área de trabalho
 5. No final deve aparecer:
 
    ```
@@ -227,8 +227,12 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
   Deve parar com `O git pull falhou` e `O sistema continua na versao anterior`.
   Desfaça com `git checkout -- README.md`.
 - [ ] **Iniciar_Padaria.bat:** faça um push que altere o `Iniciar_Padaria.bat` do repositório
-  e atualize. A atualização deve **passar**, e o atalho continua abrindo o sistema
-  (o atualizador preserva o arquivo que o instalador gerou).
+  e atualize. A atualização deve **passar**, e o atalho passa a usar a versão nova do arquivo
+  (ele vem do repositório; o instalador não gera mais uma cópia própria).
+- [ ] **Tela cheia:** abra o atalho **Sistema PDV**. O sistema abre numa janela só, sem barra
+  de endereço e sem abas, ocupando a tela inteira. **F11** sai da tela cheia e **Alt+F4** fecha.
+- [ ] **Versão:** em **Configurações**, o selo `GiroNegócios · Versão X.Y.Z` mostra a versão
+  do `frontend/package.json` que foi instalada.
 
 ### 6.5 Restaurar um backup
 1. Feche o Sistema PDV.
