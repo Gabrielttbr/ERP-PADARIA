@@ -1,12 +1,11 @@
 Como funciona a comunicação entre aplicação e impressora termica?
 
-
 Protocolo utilizado: ESC/POS -> Mais utilizado.
 Conexão: USB / BLUETOOTH / REDE (TCP/IP)
   -> No nosso sistema hoje: só USB e REDE (Bluetooth/Serial ainda não implementado).
 Construção: Usa comandos por bites.
 
-fluxo 
+fluxo
 
 PDV finaliza venda
       ↓
@@ -20,7 +19,6 @@ Impressora interpreta e imprime
       ↓
 Comando de corte do papel
 
-
 ---
 
 # Tutorial: instalar e conectar a impressora térmica
@@ -30,10 +28,10 @@ Comando de corte do papel
 Quem imprime é o **backend**, não o navegador. A impressora precisa estar ao
 alcance do computador onde o backend roda.
 
-| Cenário | Funciona? |
-|---|---|
-| Instalação local no Windows (`INSTALAR_SISTEMA.bat`, em `C:\Padaria`) | Sim, por USB ou rede |
-| Servidor na nuvem (Docker + nginx) | Não. O servidor não enxerga USB nem IP da rede da loja |
+| Cenário                                                                    | Funciona?                                                |
+| --------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Instalação local no Windows (`INSTALAR_SISTEMA.bat`, em `C:\Padaria`) | Sim, por USB ou rede                                     |
+| Servidor na nuvem (Docker + nginx)                                          | Não. O servidor não enxerga USB nem IP da rede da loja |
 
 Este tutorial vale para a **instalação local no Windows**.
 
@@ -44,6 +42,7 @@ Epson TM-T20/T88, Elgin i7/i9, Knup, Tanca, Daruma, Bematech MP-4200 (no modo
 ESC/POS) e genéricas.
 
 Não funcionam:
+
 - Impressoras serial/COM ou Bluetooth (o sistema ainda não tem esse modo).
 - Impressoras usadas só pelo driver/spooler do Windows.
 - Impressoras sem ESC/POS (ex.: etiqueta ZPL).
@@ -68,10 +67,13 @@ comprimento é variável: a bobina é contínua e o cupom cresce conforme os ite
    *Replace Driver*.
    - Depois disso a impressora some do Windows como impressora comum. É esperado:
      o sistema fala direto com o USB.
-3. **Instalar a libusb** (sem ela o log mostra `No backend available`):
+3. **libusb e pyusb** já vêm no `requirements.txt` (são obrigatórias) e são
+   instaladas pelo instalador/atualizador. Sem elas o log mostra
+   `No backend available`. Para reinstalar na mão:
    ```
-   C:\Padaria\backend\venv\Scripts\pip install libusb-package
+   C:\Padaria\backend\venv\Scripts\pip install -r C:\Padaria\backend\requirements.txt
    ```
+
    Se ainda não reconhecer: baixar a `libusb-1.0.dll` (64 bits) em libusb.info
    e copiar para `C:\Windows\System32`.
 
@@ -84,6 +86,7 @@ comprimento é variável: a bobina é contínua e o cupom cresce conforme os ite
    ```
    Test-NetConnection 192.168.1.100 -Port 9100
    ```
+
    Tem que aparecer `TcpTestSucceeded : True`.
 
 ## Passo 3 — Configurar o `.env`
@@ -92,6 +95,7 @@ Arquivo: `C:\Padaria\backend\.env`. O instalador cria com `PRINTER_TYPE=file`
 (**não imprime**, só salva o cupom em arquivo). Trocar para:
 
 USB:
+
 ```env
 PRINTER_TYPE=usb
 PRINTER_VENDOR_ID=0x0416
@@ -100,6 +104,7 @@ PRINTER_PAPER_WIDTH=80
 ```
 
 Rede:
+
 ```env
 PRINTER_TYPE=network
 PRINTER_NETWORK_IP=192.168.1.100
@@ -110,6 +115,7 @@ PRINTER_PAPER_WIDTH=80
 `PRINTER_PAPER_WIDTH`: `80` para bobina de 80mm, `58` para bobina de 58mm.
 
 Dados que saem no cabeçalho e rodapé do cupom:
+
 ```env
 PADARIA_NOME=Minha Empresa
 PADARIA_CNPJ=00.000.000/0001-00
@@ -129,17 +135,23 @@ PADARIA_MENSAGEM_RODAPE=Obrigado pela preferencia!
 Testar sem impressora: `PRINTER_TYPE=file` salva o cupom em
 `%TEMP%\ultimo_recibo.bin`; para ver o conteúdo, rodar `python backend/view_recibo.py`.
 
+## Onde ver o erro
+
+Todo erro da aplicação (inclusive falha de impressão, com o traceback) é
+gravado em `backend\logs\app.log` (`C:\Padaria\backend\logs\app.log`). O
+arquivo gira em 5 MB e guarda 5 cópias (`app.log.1` ... `app.log.5`).
+
 ## Problemas comuns
 
-| Sintoma | Causa provável |
-|---|---|
-| `No backend available` | Falta a libusb (passo 2A.3) |
-| `Device not found` | VID/PID errado ou driver não trocado para WinUSB |
-| `Access denied` / `Entity not found` | Outro programa usando a impressora; reiniciar o PC |
-| Timeout na rede | IP mudou ou impressora em outra rede/VLAN |
-| Acentos trocados (`Ã£`) | Impressora não está em CP850; ajustar a code page no utilitário do fabricante |
-| Colunas desalinhadas ou cortadas | `PRINTER_PAPER_WIDTH` diferente do papel real |
-| Imprime mas não corta | Impressora sem guilhotina (comum nas de 58mm mais baratas) |
+| Sintoma                                  | Causa provável                                                                  |
+| ---------------------------------------- | -------------------------------------------------------------------------------- |
+| `No backend available`                 | Falta a libusb (passo 2A.3)                                                      |
+| `Device not found`                     | VID/PID errado ou driver não trocado para WinUSB                                |
+| `Access denied` / `Entity not found` | Outro programa usando a impressora; reiniciar o PC                               |
+| Timeout na rede                          | IP mudou ou impressora em outra rede/VLAN                                        |
+| Acentos trocados (`Ã£`)              | Impressora não está em CP850; ajustar a code page no utilitário do fabricante |
+| Colunas desalinhadas ou cortadas         | `PRINTER_PAPER_WIDTH` diferente do papel real                                  |
+| Imprime mas não corta                   | Impressora sem guilhotina (comum nas de 58mm mais baratas)                       |
 
 ## Onde fica no código
 

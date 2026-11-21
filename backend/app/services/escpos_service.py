@@ -4,6 +4,7 @@ Sem dependência de biblioteca externa neste módulo; apenas bytes puros.
 Compatível com impressoras 80mm (42 colunas) e 58mm (32 colunas).
 """
 
+import logging
 import textwrap
 from datetime import datetime
 from decimal import Decimal
@@ -11,6 +12,7 @@ from dataclasses import dataclass
 from app.config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 # ── Constantes ESC/POS ─────────────────────────────────────────────────────────
 ESC = b"\x1b"
@@ -182,12 +184,30 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
     return bytes(buf)
 
 
+def _carregar_libusb() -> None:
+    """
+    Carrega a libusb-1.0.dll que vem no pacote `libusb-package` (Windows).
+
+    O python-escpos chama `usb.core.find()` sem backend, e o pyusb só procura a
+    DLL no PATH do sistema — que no Windows não tem. Carregando aqui uma vez, o
+    pyusb guarda o backend e o `find()` seguinte já o reutiliza. Sem o pacote
+    (Linux/Docker), não faz nada: a libusb do sistema é encontrada sozinha.
+    """
+    try:
+        import libusb_package
+        import usb.backend.libusb1
+    except ImportError:
+        return
+    usb.backend.libusb1.get_backend(find_library=libusb_package.find_library)
+
+
 def enviar_para_impressora_usb(dados_bytes: bytes) -> bool:
     """
     Envia bytes para impressora USB via python-escpos.
     Retorna True se bem-sucedido.
     """
     try:
+        _carregar_libusb()
         from escpos.printer import Usb
         vendor_id = int(settings.printer_vendor_id, 16)
         product_id = int(settings.printer_product_id, 16)
@@ -195,7 +215,7 @@ def enviar_para_impressora_usb(dados_bytes: bytes) -> bool:
         p._raw(dados_bytes)
         return True
     except Exception as exc:
-        print(f"[ESCPOS] Erro ao imprimir via USB: {exc}")
+        logger.exception("Erro ao imprimir via USB: %s", exc)
         return False
 
 
@@ -209,7 +229,7 @@ def enviar_para_impressora_network(dados_bytes: bytes) -> bool:
             s.sendall(dados_bytes)
         return True
     except Exception as exc:
-        print(f"[ESCPOS] Erro ao imprimir via rede: {exc}")
+        logger.exception("Erro ao imprimir via rede: %s", exc)
         return False
 
 

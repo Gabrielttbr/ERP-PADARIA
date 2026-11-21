@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import get_settings
+from app.logging_config import configurar_logs
 from app.database import engine, AsyncSessionLocal
 from app.migrations import aplicar_migracoes_aditivas, garantir_tabelas_novas
 from app.services.produto_diverso import garantir_produto_diverso
@@ -31,6 +32,9 @@ from app.routers import (
 )
 
 settings = get_settings()
+
+# Log em arquivo (backend/logs/app.log) antes de tudo, para pegar erro de startup
+configurar_logs(settings.log_dir, settings.log_level)
 
 # Garante que o diretório de uploads existe ANTES de qualquer mount
 os.makedirs(settings.upload_dir, exist_ok=True)
