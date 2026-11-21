@@ -14,6 +14,9 @@ from app.config import get_settings
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+# Tempo máximo (ms) de espera da impressora USB antes de desistir.
+USB_TIMEOUT_MS = 5000
+
 # ── Constantes ESC/POS ─────────────────────────────────────────────────────────
 ESC = b"\x1b"
 GS  = b"\x1d"
@@ -211,8 +214,17 @@ def enviar_para_impressora_usb(dados_bytes: bytes) -> bool:
         from escpos.printer import Usb
         vendor_id = int(settings.printer_vendor_id, 16)
         product_id = int(settings.printer_product_id, 16)
-        p = Usb(vendor_id, product_id, timeout=0)
-        p._raw(dados_bytes)
+        # timeout em ms. NUNCA 0: na libusb 0 = esperar para sempre, e se a
+        # impressora não responder (sem papel, driver errado, desligada) a
+        # escrita fica presa e trava o servidor junto.
+        p = Usb(vendor_id, product_id, timeout=USB_TIMEOUT_MS)
+        try:
+            p._raw(dados_bytes)
+        finally:
+            try:
+                p.close()   # libera o USB para a próxima impressão
+            except Exception:
+                pass
         return True
     except Exception as exc:
         logger.exception("Erro ao imprimir via USB: %s", exc)
