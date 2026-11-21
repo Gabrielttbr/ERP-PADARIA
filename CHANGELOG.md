@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.4.1] — 2026-11-21
+
+### Fixed
+- **Atualizador do Windows** parava com "Your local changes ... would be
+  overwritten by merge: frontend/package-lock.json": o `npm install` reescreve
+  esse arquivo no cliente. O atualizador agora descarta essa mudança antes de
+  baixar e depois de instalar, e o `package-lock.json` voltou ao da 1.3.0 para
+  quem ainda tem o atualizador antigo conseguir atualizar
+
 ## [1.4.0] — 2026-11-21
 
 ### Added
