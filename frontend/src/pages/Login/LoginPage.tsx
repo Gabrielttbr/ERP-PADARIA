@@ -189,18 +189,17 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Acesso rápido — em produção só o e-mail do Admin (a senha nunca vai no build
-              instalado no cliente); no servidor de desenvolvimento (npm run dev) preenche
-              também a senha e mostra o Operador */}
+          {/* Acesso de demonstração — em produção só o Admin (e-mail e senha padrão);
+              no servidor de desenvolvimento (npm run dev) também o Operador */}
           <div className="rounded-xl p-4" style={{ background: 'var(--clr-green-pale)', border: '1px solid var(--clr-border)' }}>
-            <p className="label mb-3">{import.meta.env.DEV ? 'Acesso de Demonstração' : 'Acesso rápido'}</p>
+            <p className="label mb-3">Acesso de Demonstração</p>
             <div className="space-y-1.5">
               {(import.meta.env.DEV
                 ? [
                     { perfil: 'Admin',    email: 'admin@gironegocios.com', senha: 'Admin@1234' },
                     { perfil: 'Operador', email: 'caixa@gironegocios.com', senha: 'Caixa@1234' },
                   ]
-                : [{ perfil: 'Admin', email: 'admin@gironegocios.com', senha: '' }]
+                : [{ perfil: 'Admin', email: 'admin@gironegocios.com', senha: 'Admin@1234' }]
               ).map(c => (
                 <button
                   key={c.email}
