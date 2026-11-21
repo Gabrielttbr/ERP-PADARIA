@@ -5,12 +5,12 @@ A chave é gerada por você (dono do sistema) depois que o cliente paga.
 
 ## Ciclo do cliente
 
-| Momento                          | O que o cliente vê |
-|----------------------------------|--------------------|
-| Chave com mais de 5 dias         | Nada, uso normal |
-| Faltam 5 dias ou menos           | Faixa amarela no topo (inclusive no PDV): *"Sua chave de acesso vence em X dias. Regularize o seu pagamento e solicite ao responsável pelo sistema uma nova chave de acesso."* |
-| Chave vencida                    | Sistema bloqueado: só aparece a tela para colar a chave nova |
-| Instalação/atualização sem chave | 5 dias em modo de aviso, depois bloqueia |
+| Momento                              | O que o cliente vê                                                                                                                                                               |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chave com mais de 5 dias             | Nada, uso normal                                                                                                                                                                  |
+| Faltam 5 dias ou menos               | Faixa amarela no topo (inclusive no PDV): *"Sua chave de acesso vence em X dias. Regularize o seu pagamento e solicite ao responsável pelo sistema uma nova chave de acesso."* |
+| Chave vencida                        | Sistema bloqueado: só aparece a tela para colar a chave nova                                                                                                                     |
+| Instalação/atualização sem chave | 5 dias em modo de aviso, depois bloqueia                                                                                                                                          |
 
 O cliente cola a chave nova na tela de bloqueio ou em **Configurações → Chave de acesso**
 (pode colar antes de vencer). Qualquer usuário logado pode colar a chave.
@@ -25,6 +25,18 @@ venv/bin/python gerar_chave_acesso.py "Nome do Cliente" --dias 60  # outro prazo
 
 Copie a linha que começa com `GN1.` e mande para o cliente (WhatsApp/e-mail).
 A validade conta a partir do dia em que você gera.
+
+## Testar aviso e bloqueio (no seu banco de desenvolvimento)
+
+```bash
+cd backend
+venv/bin/python simular_chave_acesso.py aviso      # faixa amarela
+venv/bin/python simular_chave_acesso.py vencida    # bloqueado
+venv/bin/python simular_chave_acesso.py valida     # volta ao normal
+```
+
+Outros estados: `aviso --dias 1`, `sem-chave`, `sem-chave-vencida`, `ver`. Grava direto no
+banco do `.env` (substitui a chave atual). Depois, F5 no navegador.
 
 ## Chave privada — IMPORTANTE
 

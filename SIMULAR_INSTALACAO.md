@@ -215,10 +215,12 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
    - [ ] O atalho **Sistema PDV** continua funcionando (feche e abra de novo).
 
 ### 6.3 Já está na versão mais recente
+
 - [ ] Rode o `ATUALIZAR_SISTEMA.bat` de novo sem fazer push: aparece
   `Ja estava na versao mais recente.`, o backup é feito e o sistema reabre.
 
 ### 6.4 Erros: a atualização tem que parar e dizer o porquê
+
 - [ ] **Banco não encontrado:** com o sistema fechado, renomeie `C:\Padaria\backend\padaria.db`
   para `padaria.db.x` e rode o atualizador. Deve parar com `Banco de dados nao encontrado`
   **antes** de baixar qualquer coisa. Volte o nome do arquivo depois.
@@ -235,6 +237,7 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
   do `frontend/package.json` que foi instalada.
 
 ### 6.5 Restaurar um backup
+
 1. Feche o Sistema PDV.
 2. Copie o arquivo de `C:\Padaria\backups\` para `C:\Padaria\backend\padaria.db`
    (substituindo).
@@ -242,14 +245,18 @@ A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é u
    - [ ] Os dados voltam a ser os do momento do backup.
 
 ### 6.6 Voltar para a versão anterior do sistema
+
 Se a versão nova tiver um problema, no `cmd`:
+
 ```bat
 cd /d C:\Padaria
 git log --oneline -5
 git reset --hard <versao-anterior>
 ```
+
 e rode o `ATUALIZAR_SISTEMA.bat` (ele reinstala as dependências e recompila a
 versão anterior). Se precisar, restaure também o backup do banco (6.5).
+
 > Enquanto a `main` do fork tiver a versão com problema, o próximo `git pull` traz ela
 > de volta: corrija (ou reverta) na `main` antes de atualizar de novo.
 
@@ -276,19 +283,19 @@ Na VM dá para testar também:
 
 ## 8. Problemas comuns
 
-| Sintoma                                           | Causa provável / o que fazer                                                                                           |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `Execute como Administrador.`                   | Rode o `.bat` com **botão direito → Executar como administrador**.                                            |
-| A Sandbox não abre / "virtualização"           | Ative a virtualização (VT-x/AMD-V) na BIOS.                                                                           |
-| Erro no `git clone`                             | Sem internet na Sandbox, ou o fork virou privado (o cliente não tem login do GitHub).                                  |
-| A instalação não tem a sua última mudança    | Faltou o `git push fork main`. O instalador sempre baixa do GitHub.                                                   |
-| `[ERRO] Falha ao inicializar o banco de dados.` | Veja a mensagem do Python logo acima. Geralmente é dependência que não instalou no passo do venv.                    |
-| O navegador não abre / página não carrega      | Espere a janela preta mostrar `Uvicorn running on http://0.0.0.0:8000` e acesse `http://localhost:8000` na mão.    |
-| Porta 8000 ocupada                                | O `Iniciar_Padaria.bat` já mata o processo que estiver na porta. Se persistir, feche as outras janelas do servidor.  |
-| Atualizador: `O git pull falhou` | Sem internet, ou alguém alterou arquivos em `C:\Padaria`. Veja com `git status` e desfaça com `git checkout -- <arquivo>`. |
-| Atualizador: `O servidor continua rodando na porta 8000` | Feche todas as janelas do Sistema PDV e rode de novo. |
-| Atualizador parou no `[4/5]` | O código novo já foi baixado. Rode de novo; se persistir, volte a versão (6.6). |
-| O nome da empresa no cupom sai "Minha Empresa"    | É o padrão do `.env` criado pelo instalador. Ajuste em **Configurações** ou em `C:\Padaria\backend\.env`. |
+| Sintoma                                                    | Causa provável / o que fazer                                                                                                      |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Execute como Administrador.`                            | Rode o `.bat` com **botão direito → Executar como administrador**.                                                       |
+| A Sandbox não abre / "virtualização"                    | Ative a virtualização (VT-x/AMD-V) na BIOS.                                                                                      |
+| Erro no `git clone`                                      | Sem internet na Sandbox, ou o fork virou privado (o cliente não tem login do GitHub).                                             |
+| A instalação não tem a sua última mudança             | Faltou o `git push fork main`. O instalador sempre baixa do GitHub.                                                              |
+| `[ERRO] Falha ao inicializar o banco de dados.`          | Veja a mensagem do Python logo acima. Geralmente é dependência que não instalou no passo do venv.                               |
+| O navegador não abre / página não carrega               | Espere a janela preta mostrar `Uvicorn running on http://0.0.0.0:8000` e acesse `http://localhost:8000` na mão.               |
+| Porta 8000 ocupada                                         | O `Iniciar_Padaria.bat` já mata o processo que estiver na porta. Se persistir, feche as outras janelas do servidor.             |
+| Atualizador: `O git pull falhou`                         | Sem internet, ou alguém alterou arquivos em `C:\Padaria`. Veja com `git status` e desfaça com `git checkout -- <arquivo>`. |
+| Atualizador: `O servidor continua rodando na porta 8000` | Feche todas as janelas do Sistema PDV e rode de novo.                                                                              |
+| Atualizador parou no `[4/5]`                             | O código novo já foi baixado. Rode de novo; se persistir, volte a versão (6.6).                                                 |
+| O nome da empresa no cupom sai "Minha Empresa"             | É o padrão do `.env` criado pelo instalador. Ajuste em **Configurações** ou em `C:\Padaria\backend\.env`.            |
 
 ---
 
