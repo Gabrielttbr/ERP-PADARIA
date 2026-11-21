@@ -170,20 +170,84 @@ Faça isso **na mesma Sandbox**, sem fechar a janela.
 
 ---
 
-## 6. Testar uma atualização (opcional)
+## 6. Testar uma atualização
 
-Simula o cliente recebendo uma versão nova.
+Simula o cliente recebendo uma versão nova pelo **`C:\Padaria\ATUALIZAR_SISTEMA.bat`**.
+Faça na mesma Sandbox dos passos 3 a 5, com vendas já registradas.
 
-1. Com o sistema instalado na Sandbox (passos 3 a 5), faça e envie uma mudança no fork, no WSL:
-   ```bash
-   git push fork main
-   ```
-2. Na Sandbox, feche o servidor e rode **`C:\Padaria\ATUALIZAR_SISTEMA.bat`**.
-   Ele faz backup do banco em `C:\Padaria\backups\`, `git pull`, atualiza as
-   dependências e recompila o frontend.
+### 6.1 Testar sem mexer na produção (recomendado)
 
-3. [ ] O sistema abre com a mudança, e os dados continuam lá.
-4. [ ] Existe um arquivo `padaria_<data>.db` em `C:\Padaria\backups\`.
+O atualizador baixa a branch que estiver ativa em `C:\Padaria`. Para testar uma
+versão **antes** de colocar na `main`, aponte a Sandbox para a branch de teste:
+
+```bat
+cd /d C:\Padaria
+git checkout -- Iniciar_Padaria.bat
+git fetch
+git checkout <nome-da-branch>
+```
+
+A partir daí, cada `git push fork <nome-da-branch>` que você fizer no WSL é uma
+"versão nova" para essa Sandbox. Os clientes reais continuam na `main`.
+
+> **Instalações antigas:** quem foi instalado antes desta versão do atualizador tem o
+> `ATUALIZAR_SISTEMA.bat` antigo, que se perde quando o `git pull` troca o próprio
+> arquivo. **Só na primeira vez**, rode antes no `cmd`:
+> `cd /d C:\Padaria && git checkout -- Iniciar_Padaria.bat && git pull --ff-only`
+> e depois o `ATUALIZAR_SISTEMA.bat`. Das próximas vezes, basta o `.bat`.
+
+### 6.2 Atualização normal
+
+1. No WSL, faça uma mudança visível (ex.: um texto numa tela), commit e push.
+2. Na Sandbox, **deixe o Padaria ERP aberto** (o atualizador tem que fechar sozinho)
+   e rode o **`ATUALIZAR_SISTEMA.bat`**.
+3. Confira na tela:
+   - [ ] `Versao instalada:` mostra o commit atual.
+   - [ ] `[1/5]` → `[OK] Servidor parado.`
+   - [ ] `[2/5]` → `[OK] Backup: C:\Padaria\backups\padaria_AAAA-MM-DD_HH-MM-SS.db (N bytes)`.
+   - [ ] `[3/5]` → lista os commits novos que foram baixados.
+   - [ ] `[4/5]` → dependências e `Interface compilada`.
+   - [ ] `[5/5]` → o sistema abre sozinho no navegador.
+   - [ ] `ATUALIZACAO CONCLUIDA` com a versão anterior, a atual e o caminho do backup.
+4. No sistema:
+   - [ ] A mudança aparece.
+   - [ ] Vendas, produtos, usuários e configurações continuam lá.
+   - [ ] O atalho **Padaria ERP** continua funcionando (feche e abra de novo).
+
+### 6.3 Já está na versão mais recente
+- [ ] Rode o `ATUALIZAR_SISTEMA.bat` de novo sem fazer push: aparece
+  `Ja estava na versao mais recente.`, o backup é feito e o sistema reabre.
+
+### 6.4 Erros: a atualização tem que parar e dizer o porquê
+- [ ] **Banco não encontrado:** com o sistema fechado, renomeie `C:\Padaria\backend\padaria.db`
+  para `padaria.db.x` e rode o atualizador. Deve parar com `Banco de dados nao encontrado`
+  **antes** de baixar qualquer coisa. Volte o nome do arquivo depois.
+- [ ] **Sem internet / git pull recusado:** em `C:\Padaria`, altere um arquivo do código
+  (ex.: acrescente uma linha no `README.md`) e faça um push que mexa no mesmo arquivo.
+  Deve parar com `O git pull falhou` e `O sistema continua na versao anterior`.
+  Desfaça com `git checkout -- README.md`.
+- [ ] **Iniciar_Padaria.bat:** faça um push que altere o `Iniciar_Padaria.bat` do repositório
+  e atualize. A atualização deve **passar**, e o atalho continua abrindo o sistema
+  (o atualizador preserva o arquivo que o instalador gerou).
+
+### 6.5 Restaurar um backup
+1. Feche o Padaria ERP.
+2. Copie o arquivo de `C:\Padaria\backups\` para `C:\Padaria\backend\padaria.db`
+   (substituindo).
+3. Abra o Padaria ERP.
+   - [ ] Os dados voltam a ser os do momento do backup.
+
+### 6.6 Voltar para a versão anterior do sistema
+Se a versão nova tiver um problema, no `cmd`:
+```bat
+cd /d C:\Padaria
+git log --oneline -5
+git reset --hard <versao-anterior>
+```
+e rode o `ATUALIZAR_SISTEMA.bat` (ele reinstala as dependências e recompila a
+versão anterior). Se precisar, restaure também o backup do banco (6.5).
+> Enquanto a `main` do fork tiver a versão com problema, o próximo `git pull` traz ela
+> de volta: corrija (ou reverta) na `main` antes de atualizar de novo.
 
 ---
 
@@ -217,6 +281,9 @@ Na VM dá para testar também:
 | `[ERRO] Falha ao inicializar o banco de dados.` | Veja a mensagem do Python logo acima. Geralmente é dependência que não instalou no passo do venv.                    |
 | O navegador não abre / página não carrega      | Espere a janela preta mostrar `Uvicorn running on http://0.0.0.0:8000` e acesse `http://localhost:8000` na mão.    |
 | Porta 8000 ocupada                                | O `Iniciar_Padaria.bat` já mata o processo que estiver na porta. Se persistir, feche as outras janelas do servidor.  |
+| Atualizador: `O git pull falhou` | Sem internet, ou alguém alterou arquivos em `C:\Padaria`. Veja com `git status` e desfaça com `git checkout -- <arquivo>`. |
+| Atualizador: `O servidor continua rodando na porta 8000` | Feche todas as janelas do Padaria ERP e rode de novo. |
+| Atualizador parou no `[4/5]` | O código novo já foi baixado. Rode de novo; se persistir, volte a versão (6.6). |
 | O nome da padaria no cupom sai "Minha Padaria"    | É o padrão do `.env` criado pelo instalador. Ajuste em **Configurações** ou em `C:\Padaria\backend\.env`. |
 
 ---
@@ -227,4 +294,5 @@ Na VM dá para testar também:
 2. O banco do cliente nasce **limpo**: só admin, empresa, Caixa 01 e **DIVERSO (999)**.
 3. A venda avulsa com o Diverso funciona numa instalação nova (id real, não o 17).
 4. Reinstalar ou reiniciar **não apaga dados** e não duplica o Diverso.
-5. A atualização (`ATUALIZAR_SISTEMA.bat`) mantém os dados e faz backup.
+5. A atualização (`ATUALIZAR_SISTEMA.bat`) para o servidor, faz e confere o backup,
+   para com uma mensagem clara em qualquer erro e mantém os dados.
