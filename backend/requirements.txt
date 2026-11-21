@@ -3,7 +3,7 @@ fastapi>=0.115.5
 uvicorn[standard]>=0.32.1
 
 # Database
-sqlalchemy>=2.0.37
+sqlalchemy[asyncio]>=2.0.37  # [asyncio] traz o greenlet (desde a 2.1 ele não vem mais por padrão)
 asyncpg>=0.30.0
 aiosqlite>=0.20.0
 alembic>=1.14.0

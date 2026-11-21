@@ -281,6 +281,7 @@ Write-OK "Venv: $venvDir"
 Write-Step "Instalando dependencias Python..."
 & $venvPython -m pip install --upgrade pip --quiet
 & $venvPip install -r (Join-Path $backendDir "requirements.txt") --quiet
+if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao instalar as dependencias Python (veja a mensagem acima)."; exit 1 }
 Write-OK "Dependencias Python instaladas"
 
 # ============================================================================
@@ -301,10 +302,12 @@ Write-OK "Banco de dados pronto"
 Write-Step "Instalando dependencias do frontend..."
 Set-Location $frontendDir
 cmd.exe /c "npm install --legacy-peer-deps"
+if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao instalar as dependencias do frontend."; exit 1 }
 Write-OK "Dependencias frontend instaladas"
 
 Write-Step "Compilando frontend (aguarde 1-2 minutos)..."
 cmd.exe /c "npm run build"
+if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao compilar o frontend."; exit 1 }
 Write-OK "Frontend compilado"
 Set-Location $INSTALL_DIR
 
