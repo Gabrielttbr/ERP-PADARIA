@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.5.3] — 2026-11-21
+
+### Fixed
+- **Sistema travava ao imprimir na impressora USB** quando ela não respondia
+  (sem papel, desligada ou com driver errado): a venda ficava presa e o
+  sistema parava de responder para todos. Agora o sistema espera a impressora
+  no máximo 5 segundos, a venda é concluída mesmo assim e o erro fica
+  registrado em `backend\logs\app.log`.
+
 ## [1.5.2] — 2026-11-21
 
 ### Fixed
