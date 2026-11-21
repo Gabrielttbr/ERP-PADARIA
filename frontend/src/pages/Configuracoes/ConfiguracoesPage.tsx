@@ -4,6 +4,9 @@ import toast from 'react-hot-toast'
 import { api } from '@/config/api'
 import { useEmpresaStore, EmpresaConfig } from '@/store/empresaStore'
 import { mensagemErro } from '@/utils/erro'
+import { useSearchParams } from 'react-router-dom'
+import { useLicencaStore } from '@/store/licencaStore'
+import { AtivarChaveForm, carregarStatusLicenca } from '@/components/licenca/LicencaGuard'
 
 interface Usuario {
   id: number
@@ -521,16 +524,75 @@ function TabSmtp() {
   )
 }
 
+// ── Tab Chave de acesso ──────────────────────────────────────────────────────
+
+const COR_SITUACAO = {
+  ok:        { bg: '#F0FDF4', color: '#15803D', border: '#BBF7D0', label: 'Em dia'    },
+  aviso:     { bg: '#FFFBEB', color: '#B45309', border: '#FDE68A', label: 'Vencendo'  },
+  bloqueada: { bg: '#FEF2F2', color: '#B91C1C', border: '#FECACA', label: 'Bloqueada' },
+}
+
+function TabLicenca() {
+  const status = useLicencaStore(s => s.status)
+
+  useEffect(() => { carregarStatusLicenca().catch(() => {}) }, [])
+
+  const cor = status ? COR_SITUACAO[status.situacao] : null
+  const expira = status?.expira_em
+    ? new Date(`${status.expira_em}T00:00:00`).toLocaleDateString('pt-BR')
+    : '—'
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <SectionCard title="Chave de acesso">
+        {status && cor ? (
+          <div data-testid="status-licenca" className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                style={{ background: cor.bg, color: cor.color, border: `1px solid ${cor.border}` }}>
+                {status.sem_chave ? 'Sem chave' : cor.label}
+              </span>
+              <span className="text-sm" style={{ color: '#4E3F34' }}>
+                {status.sem_chave ? 'Bloqueio em' : 'Válida até'} <strong>{expira}</strong>
+                {status.dias_restantes >= 0 && ` · ${status.dias_restantes} dia(s) restante(s)`}
+              </span>
+            </div>
+            {status.cliente && <p className="text-sm" style={{ color: '#8A7A6A' }}>Cliente: {status.cliente}</p>}
+            <p className="text-sm" style={{ color: '#4E3F34' }}>{status.mensagem}</p>
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: '#8A7A6A' }}>Carregando...</p>
+        )}
+        <p className="text-xs" style={{ color: '#8A7A6A' }}>
+          A chave vale por cerca de um mês e é renovada após o pagamento da mensalidade.
+          Faltando {status?.dias_aviso ?? 5} dias para vencer, o sistema passa a avisar; depois do vencimento, fica bloqueado
+          até a chave nova ser ativada. Pode colar a chave nova antes de a atual vencer.
+        </p>
+      </SectionCard>
+
+      <SectionCard>
+        <AtivarChaveForm />
+      </SectionCard>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
   { id: 'empresa',  label: 'Empresa'    },
   { id: 'usuarios', label: 'Usuários'   },
   { id: 'smtp',     label: 'E-mail / SMTP' },
+  { id: 'licenca',  label: 'Chave de acesso' },
 ]
 
+type Aba = 'empresa' | 'usuarios' | 'smtp' | 'licenca'
+
 export default function ConfiguracoesPage() {
-  const [tab, setTab] = useState<'empresa' | 'usuarios' | 'smtp'>('empresa')
+  const [params] = useSearchParams()
+  const [tab, setTab] = useState<Aba>(params.get('aba') === 'licenca' ? 'licenca' : 'empresa')
+  // O link do aviso pode ser clicado com a página já aberta
+  useEffect(() => { if (params.get('aba') === 'licenca') setTab('licenca') }, [params])
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -570,6 +632,7 @@ export default function ConfiguracoesPage() {
       {tab === 'empresa'  && <TabEmpresa  />}
       {tab === 'usuarios' && <TabUsuarios />}
       {tab === 'smtp'     && <TabSmtp     />}
+      {tab === 'licenca'  && <TabLicenca  />}
     </div>
   )
 }

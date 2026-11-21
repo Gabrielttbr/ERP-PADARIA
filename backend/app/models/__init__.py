@@ -8,6 +8,7 @@ from app.models.compra import Compra, ItemCompra
 from app.models.auditoria import LogAuditoria
 from app.models.configuracao import ConfiguracaoEmpresa
 from app.models.cliente import Cliente
+from app.models.licenca import Licenca
 from app.models.financeiro import ContaBancaria, LancamentoBancario, OperadoraCartao, TaxaCartao
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     "LogAuditoria",
     "ConfiguracaoEmpresa",
     "Cliente",
+    "Licenca",
     "ContaBancaria", "LancamentoBancario", "OperadoraCartao", "TaxaCartao",
 ]
