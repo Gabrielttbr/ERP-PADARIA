@@ -1,4 +1,6 @@
 """Produto Diverso (999): toda instalação precisa dele, com qualquer id."""
+from datetime import datetime
+
 from sqlalchemy import func, select
 
 from app.models.produto import Categoria, Produto
@@ -24,6 +26,7 @@ async def test_idempotente(db):
 async def test_reativa_diverso_desativado(db):
     diverso, _ = await garantir_produto_diverso(db)
     diverso.ativo = False
+    diverso.deleted_at = datetime.utcnow()  # exclusão lógica, como no DELETE /produtos
     await db.flush()
     diverso, alterado = await garantir_produto_diverso(db)
-    assert alterado and diverso.ativo
+    assert alterado and diverso.ativo and diverso.deleted_at is None
