@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     pix_sandbox: bool = True
     pix_webhook_url: str = ""
 
+    # Chave de acesso (bloqueio por falta de pagamento). Só desligue em
+    # desenvolvimento/testes — em cliente fica sempre ligado.
+    licenca_obrigatoria: bool = True
+
     # Upload
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 5

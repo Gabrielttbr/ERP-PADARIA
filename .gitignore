@@ -73,3 +73,10 @@ frontend/e2e/.auth/
 frontend/test-results/
 frontend/playwright-report/
 frontend/blob-report/
+
+# Chave privada da chave de acesso — NUNCA versionar (quem tem gera chaves)
+chave_privada_licenca*.pem
+.gironegocios/
+*.pem
+*.p12
+*.key

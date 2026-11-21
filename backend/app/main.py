@@ -1,14 +1,15 @@
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.config import get_settings
 from app.database import engine, AsyncSessionLocal
 from app.migrations import aplicar_migracoes_aditivas, garantir_tabelas_novas
 from app.services.produto_diverso import garantir_produto_diverso
+from app.services.licenca_service import garantir_registro, situacao_em_cache
 from app.routers import (
     auth,
     usuarios,
@@ -26,6 +27,7 @@ from app.routers import (
     super_admin,
     clientes,
     financeiro,
+    licenca,
 )
 
 settings = get_settings()
@@ -45,9 +47,9 @@ async def lifespan(app: FastAPI):
     await aplicar_migracoes_aditivas(engine)
     # O PDV depende do produto Diverso (999): garante em toda instalação/atualização
     async with AsyncSessionLocal() as db:
-        _, alterado = await garantir_produto_diverso(db)
-        if alterado:
-            await db.commit()
+        await garantir_produto_diverso(db)
+        await garantir_registro(db)
+        await db.commit()
     yield
 
 
@@ -68,6 +70,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Chave de acesso: com a chave vencida, a API recusa tudo (402) menos login,
+# a própria rota da chave e o health — é por elas que o cliente cola a chave nova.
+_ROTAS_LIVRES_LICENCA = ("/api/health", "/api/auth/", "/api/licenca/")
+
+
+@app.middleware("http")
+async def bloquear_sem_licenca(request: Request, call_next):
+    caminho = request.url.path
+    if (
+        settings.licenca_obrigatoria
+        and request.method != "OPTIONS"
+        and caminho.startswith("/api/")
+        and not caminho.startswith(_ROTAS_LIVRES_LICENCA)
+    ):
+        situacao = await situacao_em_cache(AsyncSessionLocal)
+        if situacao.bloqueada:
+            return JSONResponse(
+                status_code=402,
+                content={"detail": situacao.mensagem, "codigo": "licenca_bloqueada"},
+            )
+    return await call_next(request)
+
 
 # Static files (uploads)
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
@@ -90,6 +115,7 @@ app.include_router(configuracoes.router,prefix=f"{PREFIX}/configuracoes",tags=["
 app.include_router(super_admin.router,  prefix=f"{PREFIX}/super-admin", tags=["Super Admin"])
 app.include_router(clientes.router,     prefix=f"{PREFIX}/clientes",    tags=["Clientes"])
 app.include_router(financeiro.router,   prefix=f"{PREFIX}/financeiro",  tags=["Financeiro"])
+app.include_router(licenca.router,      prefix=f"{PREFIX}/licenca",     tags=["Chave de acesso"])
 
 
 @app.get("/api/health")

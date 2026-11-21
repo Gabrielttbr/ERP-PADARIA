@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '@/store/authStore'
+import { useLicencaStore } from '@/store/licencaStore'
 
 export const api = axios.create({
   baseURL: '/api',
@@ -20,6 +21,11 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config
+    // Chave de acesso venceu: o LicencaGuard troca a tela pelo bloqueio
+    if (error.response?.status === 402 && error.response.data?.codigo === 'licenca_bloqueada') {
+      useLicencaStore.getState().marcarBloqueada(error.response.data.detail)
+      return Promise.reject(error)
+    }
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
       try {

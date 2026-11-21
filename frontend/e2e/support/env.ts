@@ -23,6 +23,8 @@ export const E2E_ENV: Record<string, string> = {
   PRINTER_TYPE: 'file',
   APP_DEBUG: 'false',
   APP_ENV: 'development',
+  // Sem chave de acesso no banco de teste: desliga aviso/bloqueio
+  LICENCA_OBRIGATORIA: 'false',
   JWT_SECRET_KEY: 'e2e-secret-key-com-pelo-menos-32-caracteres!!',
   CORS_ORIGINS: 'http://localhost:5174',
   REPORT_TIMEZONE: 'America/Sao_Paulo',

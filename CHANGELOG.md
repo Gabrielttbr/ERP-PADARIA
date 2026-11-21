@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 ## [Não lançado]
 
 ### Added
+- **Chave de acesso mensal**: o sistema só funciona com uma chave válida, gerada
+  pelo dono com `backend/gerar_chave_acesso.py` (35 dias por padrão). Faltando
+  5 dias aparece o aviso para regularizar o pagamento; vencida, o sistema
+  bloqueia até a chave nova ser colada (tela de bloqueio ou Configurações →
+  Chave de acesso). Quem atualiza sem chave tem 5 dias para ativar uma
 - **Fabricante/marca** no cadastro de produto (além do fornecedor/distribuidor)
 - **Importação do XML da NF-e** em Compras: lê fornecedor e itens do XML que o
   fornecedor manda junto da mercadoria, casa produto existente por código de
