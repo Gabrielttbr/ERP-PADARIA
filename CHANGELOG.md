@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.5.1] — 2026-11-21
+
 ### Fixed
 - **Acesso de Demonstração no login** do sistema instalado preenchia só o
   e-mail do Admin. Agora preenche também a senha, e é só apertar Enter para
