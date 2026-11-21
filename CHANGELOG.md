@@ -8,6 +8,19 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.5.2] — 2026-11-21
+
+### Fixed
+- **Impressora térmica USB**: as bibliotecas `pyusb` e `libusb` passaram a ser
+  instaladas junto com o sistema. A impressão USB não falha mais com
+  `No backend available` por falta delas, e no Windows não é mais preciso
+  baixar a `libusb-1.0.dll` à parte.
+
+### Added
+- **Log de erros em arquivo**: todo erro do sistema (inclusive falha ao
+  imprimir o cupom) fica gravado em `backend\logs\app.log`, com os detalhes
+  para o suporte. O arquivo gira em 5 MB e guarda as 5 últimas cópias.
+
 ## [1.5.1] — 2026-11-21
 
 ### Fixed
