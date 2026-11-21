@@ -111,6 +111,10 @@ echo  [3/5] Baixando a versao nova...
 set "INICIAR=%ROOT%\Iniciar_Padaria.bat"
 git checkout -- Iniciar_Padaria.bat >nul 2>&1
 
+:: O npm install (passo 4) reescreve o package-lock.json no Windows. Essa mudanca
+:: local fazia o git pull recusar a atualizacao: descarta antes de baixar.
+git checkout -- frontend/package-lock.json >nul 2>&1
+
 git pull --ff-only
 set "ERRO_GIT=%errorlevel%"
 if not "%ERRO_GIT%"=="0" (
@@ -145,6 +149,8 @@ if errorlevel 1 (
     set "MOTIVO=Falha ao instalar as dependencias do frontend (veja a mensagem acima)."
     goto falha
 )
+:: Volta o package-lock.json ao do repositorio (o npm acabou de reescrever).
+git checkout -- package-lock.json >nul 2>&1
 echo  [OK] Dependencias do frontend.
 
 call npm run build
