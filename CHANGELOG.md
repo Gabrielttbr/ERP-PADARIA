@@ -8,12 +8,27 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.4.0] — 2026-11-21
+
 ### Added
 - **Chave de acesso mensal**: o sistema só funciona com uma chave válida, gerada
   pelo dono com `backend/gerar_chave_acesso.py` (35 dias por padrão). Faltando
   5 dias aparece o aviso para regularizar o pagamento; vencida, o sistema
   bloqueia até a chave nova ser colada (tela de bloqueio ou Configurações →
-  Chave de acesso). Quem atualiza sem chave tem 5 dias para ativar uma
+  Chave de acesso). Quem atualiza sem chave tem 5 dias para ativar uma chave
+- **GiroNegócios / Sistema PDV**: novo nome e identidade visual, sem foco só em
+  padaria
+- **Atalho da área de trabalho abre em tela cheia** e a versão instalada aparece
+  em Configurações
+- **Instalador e atualizador do Windows** (`INSTALAR_SISTEMA.bat` /
+  `ATUALIZAR_SISTEMA.bat`) com backup do banco antes de atualizar
+- **Venda por peso/volume** no PDV (modal de quantidade em kg/l) e produto
+  **Diverso (999)** para itens não cadastrados, garantido em toda instalação
+- **Máscara monetária (R$)** em todos os campos de valor e navegação por setas
+  no PDV (produtos e formas de pagamento)
+- Ícone de informação com a descrição de cada indicador do dashboard
+- Testes E2E (Playwright) dos fluxos principais: PDV, caixa, dashboard,
+  relatórios, estoque e configurações
 - **Fabricante/marca** no cadastro de produto (além do fornecedor/distribuidor)
 - **Importação do XML da NF-e** em Compras: lê fornecedor e itens do XML que o
   fornecedor manda junto da mercadoria, casa produto existente por código de
@@ -44,10 +59,20 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 ### Fixed
 - Barra de status do PDV ficava com dado antigo do caixa logo após abrir a
   sessão (cache do React Query não era invalidado)
+- Datas gravadas e exibidas no horário de São Paulo (antes saíam 3h adiantadas)
+- Pagamento em dinheiro menor que o total não fecha mais a venda, e o troco é
+  gravado corretamente
+- Erros de validação da API não deixam mais a tela em branco
+- Resumo do caixa por forma de pagamento; o valor esperado conta só o dinheiro
+- Cupom impresso em duas linhas por item, sem cortar o total
+- Instalador falhava ao criar o banco (faltava o greenlet); atualizador para o
+  servidor antes do backup e interrompe em caso de erro
 
 ### Security
 - XML da NF-e é lido com `defusedxml` (proteção contra XML bomb/XXE), não o
   `xml.etree.ElementTree` puro
+- Acesso de demonstração escondido da tela de login fora do ambiente de
+  desenvolvimento
 
 ## [1.3.0] — 2026-07-27
 
