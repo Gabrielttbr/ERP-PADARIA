@@ -50,6 +50,30 @@ class ItemRecibo:
 
 
 @dataclass
+class EmpresaRecibo:
+    """Dados da empresa no cabeçalho/rodapé do cupom (vêm de Configurações)."""
+    nome: str
+    cnpj: str | None = None
+    endereco: str | None = None
+    cidade: str | None = None
+    telefone: str | None = None
+    mensagem_rodape: str | None = None
+
+
+def empresa_do_env() -> EmpresaRecibo:
+    """Reserva: dados do .env (PADARIA_*), usados só quando a empresa ainda
+    não foi cadastrada em Configurações."""
+    return EmpresaRecibo(
+        nome=settings.padaria_nome,
+        cnpj=settings.padaria_cnpj or None,
+        endereco=settings.padaria_endereco or None,
+        cidade=settings.padaria_cidade or None,
+        telefone=settings.padaria_telefone or None,
+        mensagem_rodape=settings.padaria_mensagem_rodape or None,
+    )
+
+
+@dataclass
 class DadosRecibo:
     numero_venda: int
     uuid_venda: str
@@ -62,6 +86,8 @@ class DadosRecibo:
     pagamentos: list[dict]   # [{"forma": "dinheiro", "valor": 20.00}]
     troco: Decimal
     data_hora: datetime
+    # None = usa o .env (empresa_do_env)
+    empresa: EmpresaRecibo | None = None
 
 
 def gerar_recibo(dados: DadosRecibo) -> bytes:
@@ -120,15 +146,18 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
     buf = bytearray()
     buf += INIT
 
+    empresa = dados.empresa or empresa_do_env()
+
     # Cabeçalho
-    buf += center(settings.padaria_nome.upper())
-    buf += center(f"CNPJ: {settings.padaria_cnpj}")
-    if settings.padaria_endereco:
-        buf += center(settings.padaria_endereco)
-    if settings.padaria_cidade:
-        buf += center(settings.padaria_cidade)
-    if settings.padaria_telefone:
-        buf += center(f"Tel: {settings.padaria_telefone}")
+    buf += center(empresa.nome.upper())
+    if empresa.cnpj:
+        buf += center(f"CNPJ: {empresa.cnpj}")
+    if empresa.endereco:
+        buf += center(empresa.endereco)
+    if empresa.cidade:
+        buf += center(empresa.cidade)
+    if empresa.telefone:
+        buf += center(f"Tel: {empresa.telefone}")
     buf += sep("=")
     buf += center("CUPOM NÃO FISCAL")
     buf += sep("=")
@@ -178,7 +207,8 @@ def gerar_recibo(dados: DadosRecibo) -> bytes:
     buf += sep("=")
 
     # Rodapé
-    buf += center(settings.padaria_mensagem_rodape)
+    if empresa.mensagem_rodape:
+        buf += center(empresa.mensagem_rodape)
     buf += center(f"UUID: {dados.uuid_venda[:18]}")
     buf += LINE_FEED * 3
 

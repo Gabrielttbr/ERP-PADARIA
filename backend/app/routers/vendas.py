@@ -13,7 +13,8 @@ from app.models.venda import Venda, ItemVenda
 from app.schemas.venda import VendaCreate, VendaRead, VendaCancelamento
 from app.services import venda_service
 from app.services import escpos_service
-from app.services.escpos_service import DadosRecibo, ItemRecibo
+from app.services.escpos_service import DadosRecibo, EmpresaRecibo, ItemRecibo
+from app.models.configuracao import ConfiguracaoEmpresa
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -180,6 +181,24 @@ async def _montar_dados_recibo(venda: Venda, operador_nome: str, db: AsyncSessio
         pagamentos=_pagamentos_recebidos(venda),
         troco=venda.troco,
         data_hora=venda.created_at,
+        empresa=await _empresa_do_cadastro(db),
+    )
+
+
+async def _empresa_do_cadastro(db: AsyncSession) -> EmpresaRecibo | None:
+    """Dados da empresa cadastrados em Configurações → Empresa. Sem cadastro,
+    retorna None e o cupom usa o .env."""
+    result = await db.execute(select(ConfiguracaoEmpresa).where(ConfiguracaoEmpresa.id == 1))
+    cfg = result.scalar_one_or_none()
+    if not cfg:
+        return None
+    return EmpresaRecibo(
+        nome=cfg.nome,
+        cnpj=cfg.cnpj,
+        endereco=cfg.endereco,
+        cidade=cfg.cidade,
+        telefone=cfg.telefone,
+        mensagem_rodape=cfg.mensagem_rodape,
     )
 
 

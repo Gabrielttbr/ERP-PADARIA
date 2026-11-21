@@ -8,6 +8,14 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+## [1.5.4] — 2026-11-21
+
+### Fixed
+- **Cupom com os dados da empresa cadastrada**: o nome, o CNPJ, o endereço,
+  a cidade, o telefone e a mensagem do rodapé passam a vir de Configurações →
+  Empresa. Antes o cupom ignorava o que era alterado ali. Campo deixado em
+  branco no cadastro não sai no cupom.
+
 ## [1.5.3] — 2026-11-21
 
 ### Fixed

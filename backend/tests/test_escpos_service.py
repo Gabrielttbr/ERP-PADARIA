@@ -99,3 +99,48 @@ def test_item_por_peso_mostra_quantidade_com_tres_casas(largura):
     assert linha_valores.startswith("  0,200 kg x R$ 5,90")
     assert linha_valores.endswith("R$ 1,18")
     assert len(linha_valores) == largura
+
+
+# ── Dados da empresa no cupom ───────────────────────────────────────────────
+
+def test_cupom_usa_nome_e_cnpj_do_cadastro_da_empresa():
+    dados = _dados([_item()])
+    dados.empresa = es.EmpresaRecibo(
+        nome="Padaria Pão Quente", cnpj="12.345.678/0001-90",
+        cidade="Recife - PE", mensagem_rodape="Volte sempre!",
+    )
+    linhas = [l.strip() for l in _texto(gerar_recibo(dados))]
+    assert "PADARIA PÃO QUENTE" in linhas
+    assert "CNPJ: 12.345.678/0001-90" in linhas
+    assert "Recife - PE" in linhas
+    assert "Volte sempre!" in linhas
+    # nada do .env aparece quando a empresa está cadastrada
+    assert "PADARIA TESTE" not in linhas
+    assert "CNPJ: 00.000.000/0001-00" not in linhas
+
+
+def test_cupom_sem_cnpj_cadastrado_nao_imprime_linha_de_cnpj():
+    dados = _dados([_item()])
+    dados.empresa = es.EmpresaRecibo(nome="Padaria Sem Documento")
+    texto = "\n".join(_texto(gerar_recibo(dados)))
+    assert "PADARIA SEM DOCUMENTO" in texto
+    assert "CNPJ:" not in texto
+    assert "None" not in texto
+
+
+def test_cupom_sem_cadastro_usa_dados_do_env():
+    linhas = [l.strip() for l in _texto(gerar_recibo(_dados([_item()])))]
+    assert "PADARIA TESTE" in linhas
+    assert "CNPJ: 00.000.000/0001-00" in linhas
+
+
+async def test_recibo_da_venda_pega_empresa_cadastrada(db):
+    from app.models.configuracao import ConfiguracaoEmpresa
+    from app.routers.vendas import _empresa_do_cadastro
+
+    assert await _empresa_do_cadastro(db) is None  # sem cadastro → .env
+
+    db.add(ConfiguracaoEmpresa(id=1, nome="Padaria Nova", cnpj="11.222.333/0001-44"))
+    await db.flush()
+    empresa = await _empresa_do_cadastro(db)
+    assert (empresa.nome, empresa.cnpj) == ("Padaria Nova", "11.222.333/0001-44")
