@@ -8,6 +8,23 @@ This project adheres to [Semantic Versioning](https://semver.org/) and [Conventi
 
 ## [Não lançado]
 
+### Added
+- **Cadastro rápido de produtos no Estoque, só pelo teclado**: `F2` abre o
+  cadastro com o cursor no código de barras; `Enter` passa para o próximo campo
+  (inclusive o Enter que o leitor manda no fim da leitura) e, no último campo,
+  cadastra; `Ctrl+Enter` cadastra de qualquer campo; `↑ ↓` sobem/descem entre
+  os campos e `← →` vão para o campo ao lado; `Esc` fecha. Com "Continuar
+  cadastrando" (ligado por padrão) o formulário fica aberto e limpo depois de
+  salvar, mantendo categoria e unidade, com contador do que já foi cadastrado.
+  Código de barras já cadastrado é avisado logo na leitura, e campo obrigatório
+  vazio leva o cursor até ele
+- **Padrões do cadastro novo**: estoque inicial **9.999.999** (o maior inteiro
+  que a coluna `Numeric(10,3)` aceita) e preço de custo **R$ 0,01**. Nos campos
+  de preço o primeiro dígito digitado substitui o valor que já está lá
+- **Acesso rápido no login** de volta: em produção mostra só o e-mail do Admin
+  (preenche o e-mail e vai para a senha; nenhuma senha vai no sistema instalado).
+  No `npm run dev` continua o acesso de demonstração completo
+
 ## [1.4.1] — 2026-11-21
 
 ### Fixed

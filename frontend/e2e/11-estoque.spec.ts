@@ -202,6 +202,86 @@ test.describe('Cadastro de produto @estoque @produto', () => {
   })
 })
 
+/** Cadastro rápido: o cliente cadastra muitos produtos por dia só no teclado. */
+test.describe('Cadastro rápido pelo teclado @estoque @produto @teclado', () => {
+  test.beforeEach(async ({ seed }) => seed('base'))
+
+  test('Enter avança os campos, cadastra no último e já deixa pronto o próximo', async ({ page }) => {
+    const estoque = new TelaEstoque(page)
+    await estoque.abrir()
+    await test.step('Quando abro o cadastro pelo F2, o código de barras já está focado', async () => {
+      await page.keyboard.press('F2')
+      await expect(page.getByPlaceholder('Leia com o scanner ou digite manualmente')).toBeFocused()
+    })
+    await test.step('E o estoque inicial já vem 9999999 e o custo R$ 0,01', async () => {
+      await expect(page.getByTestId('produto-estoque')).toHaveValue('9999999')
+      await expect(page.getByTestId('produto-preco-custo')).toHaveValue(reBrl(0.01))
+    })
+    await test.step('E preencho tudo só com o teclado, passando de campo com Enter', async () => {
+      await page.keyboard.type('7890000000017')
+      await page.keyboard.press('Enter')
+      await expect(page.getByPlaceholder('Ex: Arroz 5kg')).toBeFocused()
+      await page.keyboard.type('Biscoito')
+      await page.keyboard.press('Enter')                       // → fabricante
+      await page.keyboard.press('Enter')                       // → categoria
+      await expect(page.getByTestId('produto-categoria')).toBeFocused()
+      await page.getByTestId('produto-categoria').selectOption({ label: 'Pães' })
+      await page.keyboard.press('Enter')                       // → preço de venda
+      await expect(page.getByTestId('produto-preco-venda')).toBeFocused()
+      for (const d of '450') await page.keyboard.press(d)
+      await page.keyboard.press('ArrowRight')                  // → preço de custo (ao lado)
+      await expect(page.getByTestId('produto-preco-custo')).toBeFocused()
+      for (const d of '150') await page.keyboard.press(d)
+      await page.keyboard.press('ArrowDown')                   // → unidade
+      await page.keyboard.press('Enter')                       // → estoque inicial
+      await page.keyboard.type('30')
+      await page.keyboard.press('Enter')                       // → estoque mínimo
+      await page.keyboard.press('Enter')                       // último campo: cadastra
+      await expect(page.getByText('Produto cadastrado!')).toBeVisible()
+    })
+    await test.step('Então o formulário continua aberto, limpo, com a categoria mantida e o código focado', async () => {
+      await expect(page.getByTestId('cadastro-contador')).toContainText('1 cadastrado agora · último: Biscoito')
+      await expect(page.getByPlaceholder('Leia com o scanner ou digite manualmente')).toBeFocused()
+      await expect(page.getByPlaceholder('Ex: Arroz 5kg')).toHaveValue('')
+      await expect(page.getByTestId('produto-categoria').locator('option:checked')).toHaveText('Pães')
+    })
+    await test.step('E no banco o produto foi gravado certo', () =>
+      expect(consultarBanco(
+        `select p.codigo_barras, p.preco_custo, p.preco_venda, p.estoque_atual, c.nome as categoria
+           from produtos p join categorias c on c.id = p.categoria_id where p.nome = 'Biscoito'`))
+        .toEqual([{ codigo_barras: '7890000000017', preco_custo: 1.5, preco_venda: 4.5, estoque_atual: 30, categoria: 'Pães' }]))
+    await test.step('E o próximo produto sai com Ctrl+Enter de qualquer campo', async () => {
+      await page.keyboard.press('Enter')
+      await page.keyboard.type('Rosquinha')
+      await page.keyboard.press('Enter')
+      await page.keyboard.press('Enter')
+      await page.keyboard.press('Enter')
+      for (const d of '300') await page.keyboard.press(d)
+      await page.keyboard.press('Control+Enter')
+      await expect(page.getByTestId('cadastro-contador')).toContainText('2 cadastrados agora · último: Rosquinha')
+      await expect(estoque.linha('Rosquinha')).toContainText('Pães')
+    })
+    await test.step('E sem mexer, o estoque inicial vai 9.999.999 e o custo R$ 0,01', () =>
+      expect(consultarBanco(`select preco_custo, preco_venda, estoque_atual from produtos where nome = 'Rosquinha'`))
+        .toEqual([{ preco_custo: 0.01, preco_venda: 3, estoque_atual: 9999999 }]))
+    await test.step('E Esc fecha o cadastro', async () => {
+      await page.keyboard.press('Escape')
+      await expect(page.getByPlaceholder('Ex: Arroz 5kg')).toBeHidden()
+    })
+  })
+
+  test('Campo obrigatório vazio: avisa e volta o cursor para ele', async ({ page }) => {
+    const estoque = new TelaEstoque(page)
+    await estoque.abrir()
+    await page.keyboard.press('F2')
+    await expect(page.getByPlaceholder('Leia com o scanner ou digite manualmente')).toBeFocused()
+    await page.keyboard.press('Enter')
+    await page.keyboard.press('Control+Enter')
+    await expect(page.getByText('Nome é obrigatório')).toBeVisible()
+    await expect(page.getByPlaceholder('Ex: Arroz 5kg')).toBeFocused()
+  })
+})
+
 /** cenarios_testes.md — 9. Estoque · Funcionalidade: Movimentação de estoque */
 test.describe('Movimentação de estoque @estoque @movimentacao', () => {
   test.beforeEach(async ({ seed }) => seed('base'))
