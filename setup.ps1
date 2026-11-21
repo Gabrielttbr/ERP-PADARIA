@@ -221,8 +221,8 @@ Write-Step "Preparando $INSTALL_DIR..."
 if (Test-Path (Join-Path $INSTALL_DIR ".git")) {
     Write-Warn "Repositorio ja existe - atualizando..."
     Set-Location $INSTALL_DIR
-    # O Iniciar_Padaria.bat e gerado por este instalador (passo 9) por cima do
-    # arquivo do repositorio: devolve o original pro git nao recusar o pull.
+    # Instalacoes antigas tem um Iniciar_Padaria.bat gerado pelo instalador por
+    # cima do arquivo do repositorio: descarta, para o git nao recusar o pull.
     & $GIT checkout -- Iniciar_Padaria.bat
     & $GIT pull --ff-only
     if ($LASTEXITCODE -ne 0) { Write-Err "Falha ao atualizar o codigo (git pull). Verifique a internet e arquivos alterados em $INSTALL_DIR."; exit 1 }
@@ -319,34 +319,11 @@ Set-Location $INSTALL_DIR
 # ============================================================================
 # 9. Script de inicializacao
 # ============================================================================
-Write-Step "Criando script de inicializacao..."
-$startBat   = Join-Path $INSTALL_DIR "Iniciar_Padaria.bat"
-$venvPython2 = Join-Path $venvDir "Scripts\python.exe"
-$batLines = @(
-    "@echo off",
-    "title Sistema PDV",
-    "color 0A",
-    ("cd /d """ + $backendDir + """"),
-    ("set PYTHONPATH=" + $backendDir),
-    ("if not exist """ + (Join-Path $backendDir "uploads") + """ mkdir """ + (Join-Path $backendDir "uploads") + """"),
-    "echo.",
-    "echo  ============================================",
-    "echo       SISTEMA PDV - Iniciando...",
-    "echo  ============================================",
-    "echo.",
-    "echo  Acesse: http://localhost:8000",
-    "echo  Para encerrar: feche esta janela.",
-    "echo.",
-    "echo  [!] Verificando se a porta 8000 esta livre...",
-    "for /f ""tokens=5"" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>&1",
-    # Abre o sistema em tela cheia assim que o servidor responder (abrir_sistema.ps1)
-    ("start """" /b powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ + (Join-Path $INSTALL_DIR "abrir_sistema.ps1") + """"),
-    ("""" + $venvPython2 + """ -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"),
-    "echo.",
-    "echo  [!] Servidor encerrado ou falhou. Verifique o erro acima.",
-    "pause"
-)
-[System.IO.File]::WriteAllLines($startBat, $batLines, [System.Text.Encoding]::ASCII)
+Write-Step "Verificando script de inicializacao..."
+# O Iniciar_Padaria.bat vem pronto do repositorio (e o git pull o mantem
+# atualizado). Antes ele era gerado aqui, por cima do arquivo do repositorio.
+$startBat = Join-Path $INSTALL_DIR "Iniciar_Padaria.bat"
+if (-not (Test-Path $startBat)) { Write-Err "Iniciar_Padaria.bat nao encontrado em $INSTALL_DIR."; exit 1 }
 Write-OK "Script: $startBat"
 
 # ============================================================================
