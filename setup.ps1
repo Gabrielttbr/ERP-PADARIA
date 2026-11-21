@@ -339,7 +339,8 @@ $batLines = @(
     "echo.",
     "echo  [!] Verificando se a porta 8000 esta livre...",
     "for /f ""tokens=5"" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>&1",
-    "start /b powershell -WindowStyle Hidden -Command ""Start-Sleep 12; Start-Process 'http://localhost:8000'""",
+    # Abre o sistema em tela cheia assim que o servidor responder (abrir_sistema.ps1)
+    ("start """" /b powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File """ + (Join-Path $INSTALL_DIR "abrir_sistema.ps1") + """"),
     ("""" + $venvPython2 + """ -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"),
     "echo.",
     "echo  [!] Servidor encerrado ou falhou. Verifique o erro acima.",
