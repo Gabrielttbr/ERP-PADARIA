@@ -17,7 +17,7 @@ CODIGO_DIVERSO = "999"
 
 
 async def garantir_produto_diverso(db: AsyncSession) -> tuple[Produto, bool]:
-    """Cria o Diverso se não existir (ou reativa, se foi desativado).
+    """Cria o Diverso se não existir (ou reativa, se foi desativado/excluído).
 
     Retorna (produto, alterado). Não faz commit: quem chama decide.
     """
@@ -27,9 +27,10 @@ async def garantir_produto_diverso(db: AsyncSession) -> tuple[Produto, bool]:
     )).scalar_one_or_none()
 
     if diverso:
-        if diverso.ativo:
+        if diverso.ativo and diverso.deleted_at is None:
             return diverso, False
         diverso.ativo = True
+        diverso.deleted_at = None
         diverso.updated_at = now
         return diverso, True
 
